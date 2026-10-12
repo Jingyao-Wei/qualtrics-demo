@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Six-period prediction demo</title><style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#243746;font-family:Arial,sans-serif;line-height:1.5}.page{max-width:1040px;margin:36px auto;padding:0 20px}header{margin-bottom:22px}.eyebrow{font-size:12px;letter-spacing:1.3px;text-transform:uppercase;color:#627286;font-weight:700}h1{font-size:28px;margin:8px 0}header p{margin:6px 0;max-width:760px}.notice{padding:10px 14px;background:#fff3d6;border-radius:6px;font-size:14px}main{padding:24px;background:white;border:1px solid #dce2e8;border-radius:10px}.QuestionText>p{margin-top:0}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;margin:20px 0 0;text-align:center;font-size:14px}th,td{padding:9px;border-bottom:1px solid #e5e9ed}thead th{background:#f5f7f9}tbody th{text-align:left;white-space:nowrap}input{width:100%;max-width:140px;min-height:40px;border:1px solid #9aa8b4;border-radius:5px;padding:8px;text-align:center;font-size:16px;color:#243746}input[aria-invalid="true"]{border:2px solid #a1122a}input:focus{outline:2px solid #2563eb;outline-offset:2px}footer{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding-top:22px}button{padding:10px 20px;border:1px solid #1a4867;border-radius:6px;background:#1a4867;color:white;font-size:15px;cursor:pointer}button:disabled{background:#d8e0e6;border-color:#d8e0e6;color:#526171;cursor:default}.secondary{background:white;color:#1a4867}.caption{font-size:13px;color:#526171;margin-top:16px}a{color:#1a4867}@media(max-width:600px){.page{padding:0 12px;margin:20px auto}main{padding:12px}h1{font-size:24px}th,td{padding:6px}table{font-size:13px}}
+</style></head><body><div class="page"><header><div class="eyebrow">Interactive survey prototype</div><h1>Predict the treatment effects</h1><p>Six periods. Three treatment–control comparisons. Enter your predictions directly on the graph or in the table.</p><p class="notice">Demonstration only. Axis limits −0.10 to +0.30 are examples. Responses stay on this page and are not sent anywhere.</p></header><main id="QIDDEMO"><div class="QuestionText"><p>Please predict the difference between each treatment arm and the Control arm for each of the six individual two-week periods.</p>
+<p>For consumption, enter log points. For example, 0.10 means 0.10 log points higher consumption than Control (approximately 10.5% higher). Zero means no difference.</p>
+<div class="six-period-plot">The interactive graph loads in Survey Preview. If it does not load, enter your predictions in the table below.</div>
+</div><div class="table-wrap"><table><thead><tr><th scope="col">Time period</th><th scope="col">S–C<br>Stable</th><th scope="col">P–C<br>Predictable</th><th scope="col">R–C<br>Risky</th></tr></thead><tbody><tr><th scope="row">Period 1</th><td><input type="text" id="QR~QIDDEMO~1~1~TEXT" autocomplete="off" aria-label="Period 1, column 1"></td><td><input type="text" id="QR~QIDDEMO~1~2~TEXT" autocomplete="off" aria-label="Period 1, column 2"></td><td><input type="text" id="QR~QIDDEMO~1~3~TEXT" autocomplete="off" aria-label="Period 1, column 3"></td></tr><tr><th scope="row">Period 2</th><td><input type="text" id="QR~QIDDEMO~2~1~TEXT" autocomplete="off" aria-label="Period 2, column 1"></td><td><input type="text" id="QR~QIDDEMO~2~2~TEXT" autocomplete="off" aria-label="Period 2, column 2"></td><td><input type="text" id="QR~QIDDEMO~2~3~TEXT" autocomplete="off" aria-label="Period 2, column 3"></td></tr><tr><th scope="row">Period 3</th><td><input type="text" id="QR~QIDDEMO~3~1~TEXT" autocomplete="off" aria-label="Period 3, column 1"></td><td><input type="text" id="QR~QIDDEMO~3~2~TEXT" autocomplete="off" aria-label="Period 3, column 2"></td><td><input type="text" id="QR~QIDDEMO~3~3~TEXT" autocomplete="off" aria-label="Period 3, column 3"></td></tr><tr><th scope="row">Period 4</th><td><input type="text" id="QR~QIDDEMO~4~1~TEXT" autocomplete="off" aria-label="Period 4, column 1"></td><td><input type="text" id="QR~QIDDEMO~4~2~TEXT" autocomplete="off" aria-label="Period 4, column 2"></td><td><input type="text" id="QR~QIDDEMO~4~3~TEXT" autocomplete="off" aria-label="Period 4, column 3"></td></tr><tr><th scope="row">Period 5</th><td><input type="text" id="QR~QIDDEMO~5~1~TEXT" autocomplete="off" aria-label="Period 5, column 1"></td><td><input type="text" id="QR~QIDDEMO~5~2~TEXT" autocomplete="off" aria-label="Period 5, column 2"></td><td><input type="text" id="QR~QIDDEMO~5~3~TEXT" autocomplete="off" aria-label="Period 5, column 3"></td></tr><tr><th scope="row">Period 6</th><td><input type="text" id="QR~QIDDEMO~6~1~TEXT" autocomplete="off" aria-label="Period 6, column 1"></td><td><input type="text" id="QR~QIDDEMO~6~2~TEXT" autocomplete="off" aria-label="Period 6, column 2"></td><td><input type="text" id="QR~QIDDEMO~6~3~TEXT" autocomplete="off" aria-label="Period 6, column 3"></td></tr></tbody></table></div></main><footer><button id="NextButton" disabled>Check predictions</button><button id="ResetButton" class="secondary">Clear answers</button><span id="DemoMessage" role="status"></span></footer><p class="caption">Control receives no work. S = Stable; P = Predictable; R = Risky (unpredictable). Each period lasts two weeks.<br>This demo simulates a classic Qualtrics matrix. <a href="SETUP.md">Setup instructions</a> · <a href="question.js">Question JavaScript</a></p></div>
+<script>
+var demoReady=[], demoUnload=[];
+var Qualtrics={SurveyEngine:{addOnReady:function(f){demoReady.push(f);},addOnUnload:function(f){demoUnload.push(f);}}};
+var demoQuestion={questionId:"QIDDEMO",getQuestionContainer:function(){return document.getElementById("QIDDEMO");},enableNextButton:function(){document.getElementById("NextButton").disabled=false;},disableNextButton:function(){document.getElementById("NextButton").disabled=true;}};
+</script><script>/* Paste this WHOLE file into the question's JavaScript editor.
+   Use a NEW Matrix Table > Text Entry question: 6 rows, 3 columns.
+   Keep row/column order fixed. See SETUP.md for instructions.
+   This adapter targets the classic Qualtrics layout, not Simple layout.
+*/
+Qualtrics.SurveyEngine.addOnReady(function () {
+    "use strict";
+
+    // EDIT THESE SETTINGS. Bounds are demonstration values, not study decisions.
+    var config = {
+        title: "Consumption (log)",
+        unit: "Log points relative to control",
+        min: -0.10,
+        max: 0.30,
+        tick: 0.10,
+        step: 0.01,
+        decimals: 2,
+        periods: ["1", "2", "3", "4", "5", "6"],
+        rowIds: [1, 2, 3, 4, 5, 6],
+        columnIds: [1, 2, 3],
+        series: [
+            { label: "S–C", name: "Stable minus Control", fill: "#f5d342", stroke: "#8c7410", shape: "circle" },
+            { label: "P–C", name: "Predictable minus Control", fill: "#ba263c", stroke: "#871b2c", shape: "square" },
+            { label: "R–C", name: "Risky minus Control", fill: "#418a60", stroke: "#235237", shape: "triangle" }
+        ]
+    };
+
+    var question = this;
+    var container = question.getQuestionContainer();
+    var host = container.querySelector(".six-period-plot");
+    if (!host) return;
+    host.textContent = "";
+
+    var count = config.periods.length * config.series.length;
+    var cells = [];
+    config.rowIds.forEach(function (row, r) {
+        config.columnIds.forEach(function (column, s) {
+            var id = "QR~" + question.questionId + "~" + row + "~" + column + "~TEXT";
+            var input = document.getElementById(id);
+            if (input && container.contains(input)) cells.push({ input: input, period: r, series: s });
+        });
+    });
+    if (cells.length !== count) {
+        host.textContent = "The graph could not find its answer fields. You can use the table below. Survey editor: check the layout and row/column IDs in SETUP.md.";
+        return;
+    }
+
+    var ns = "http://www.w3.org/2000/svg";
+    var width = 900, height = 450;
+    var left = 78, right = 876, top = 48, bottom = 350;
+    var plotHeight = bottom - top;
+    var markers = [];
+    var activeDrag = null;
+    var disposers = [];
+
+    function listen(target, event, handler) {
+        target.addEventListener(event, handler);
+        disposers.push(function () { target.removeEventListener(event, handler); });
+    }
+    function element(tag, attributes, text, parent) {
+        var node = document.createElementNS(ns, tag);
+        Object.keys(attributes || {}).forEach(function (key) { node.setAttribute(key, attributes[key]); });
+        if (text !== undefined) node.textContent = text;
+        (parent || svg).appendChild(node);
+        return node;
+    }
+    function y(value) {
+        // Unequal bounds, ONE linear scale: equal changes occupy equal distances.
+        return bottom - (value - config.min) / (config.max - config.min) * plotHeight;
+    }
+    function format(value) {
+        return (Math.abs(value) < config.step / 2 ? 0 : value).toFixed(config.decimals);
+    }
+    function read(input) {
+        var raw = input.value.trim();
+        if (raw === "") return { value: null, error: "" };
+        // Accept a decimal comma too; normalize it before submission.
+        if (!/^[+-]?(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(raw)) {
+            return { value: null, error: "Enter a number." };
+        }
+        var value = Number(raw.replace(",", "."));
+        if (!Number.isFinite(value) || value < config.min || value > config.max) {
+            return { value: null, error: "Use a value from " + format(config.min) + " to " + format(config.max) + "." };
+        }
+        var steps = (value - config.min) / config.step;
+        if (Math.abs(steps - Math.round(steps)) > 0.000001) {
+            return { value: null, error: "Use increments of " + format(config.step) + "." };
+        }
+        return { value: value, error: "" };
+    }
+    function shape(series, parent, x, yy, fill) {
+        var attrs = { fill: fill, stroke: series.stroke, "stroke-width": 2 };
+        if (series.shape === "circle") {
+            return element("circle", Object.assign(attrs, { cx: x, cy: yy, r: 7 }), undefined, parent);
+        }
+        if (series.shape === "square") {
+            return element("rect", Object.assign(attrs, { x: x - 7, y: yy - 7, width: 14, height: 14 }), undefined, parent);
+        }
+        return element("polygon", Object.assign(attrs, { points: x + "," + (yy - 9) + " " + (x - 9) + "," + (yy + 7) + " " + (x + 9) + "," + (yy + 7) }), undefined, parent);
+    }
+
+    var style = document.createElement("style");
+    style.textContent = ".six-period-plot{font-family:Arial,sans-serif;color:#243746}.six-period-plot .sp-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}.six-period-plot svg{display:block;width:100%;min-width:760px;height:auto}.six-period-plot .sp-handle{cursor:ns-resize;touch-action:none;outline:none}.six-period-plot .sp-handle:focus .sp-hit{stroke:#2563eb;stroke-width:2;fill:#2563eb;fill-opacity:.08}.six-period-plot .sp-help{font-size:14px;line-height:1.5;margin:8px 0}.six-period-plot .sp-status{font-size:14px;font-weight:600;margin:8px 0}.six-period-plot .sp-error{color:#a1122a}.six-period-plot .sp-legend{display:flex;gap:10px 22px;flex-wrap:wrap;justify-content:center;font-size:14px}.six-period-plot .sp-key{display:inline-flex;align-items:center;gap:7px}.six-period-plot .sp-key svg{width:24px;height:24px;min-width:24px}";
+    host.appendChild(style);
+    var scroll = document.createElement("div");
+    scroll.className = "sp-scroll";
+    scroll.tabIndex = 0;
+    scroll.setAttribute("aria-label", "Six-period prediction graph; scroll horizontally on smaller screens.");
+    host.appendChild(scroll);
+    var svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+    svg.setAttribute("role", "group");
+    svg.setAttribute("aria-label", config.title + ": enter predictions for six individual periods.");
+    scroll.appendChild(svg);
+
+    element("text", { x: width / 2, y: 25, "text-anchor": "middle", "font-size": 21, "font-weight": 600 }, config.title);
+    for (var t = 0; config.min + t * config.tick <= config.max + 0.000001; t++) {
+        var value = Number((config.min + t * config.tick).toFixed(8));
+        element("line", { x1: left, x2: right, y1: y(value), y2: y(value), stroke: Math.abs(value) < 0.000001 ? "#76828b" : "#e4e7eb", "stroke-width": Math.abs(value) < 0.000001 ? 1.5 : 1 });
+        element("text", { x: left - 13, y: y(value) + 5, "text-anchor": "end", "font-size": 15, fill: "#435366" }, format(value));
+    }
+    element("text", { x: width / 2, y: 411, "text-anchor": "middle", "font-size": 17 }, "Time period (each period is two weeks)");
+    element("text", { x: width / 2, y: 437, "text-anchor": "middle", "font-size": 14, fill: "#536273" }, config.unit);
+    config.periods.forEach(function (period, r) {
+        var x = left + (r + 0.5) * (right - left) / config.periods.length;
+        element("line", { x1: x, x2: x, y1: top, y2: bottom, stroke: "#eff1f4" });
+        element("text", { x: x, y: bottom + 27, "text-anchor": "middle", "font-size": 16 }, period);
+    });
+
+    var legend = document.createElement("div");
+    legend.className = "sp-legend";
+    config.series.forEach(function (series) {
+        var key = document.createElement("span");
+        key.className = "sp-key";
+        var icon = document.createElementNS(ns, "svg");
+        icon.setAttribute("viewBox", "0 0 24 24");
+        icon.setAttribute("aria-hidden", "true");
+        shape(series, icon, 12, 12, series.fill);
+        key.appendChild(icon);
+        key.appendChild(document.createTextNode(series.label + "  " + series.name));
+        legend.appendChild(key);
+    });
+    host.appendChild(legend);
+    var help = document.createElement("p");
+    help.className = "sp-help";
+    help.textContent = "Drag each marker vertically or type a value in the table. Hollow markers have not been answered. Click a marker at zero to explicitly predict zero. Keyboard: use arrow keys to change a marker, Enter to confirm zero, or Delete to clear it. On small screens, scroll the graph sideways.";
+    host.appendChild(help);
+    var status = document.createElement("p");
+    status.className = "sp-status";
+    status.setAttribute("aria-live", "polite");
+    host.appendChild(status);
+
+    function update() {
+        var answered = 0, firstError = "";
+        cells.forEach(function (cell, i) {
+            var answer = read(cell.input);
+            var valid = answer.value !== null;
+            if (valid) answered++;
+            if (answer.error && !firstError) firstError = "Period " + config.periods[cell.period] + ", " + config.series[cell.series].label + ": " + answer.error;
+            cell.input.setAttribute("aria-invalid", answer.error ? "true" : "false");
+            cell.input.setCustomValidity(answer.error);
+            var marker = markers[i];
+            marker.group.setAttribute("transform", "translate(" + marker.x + "," + y(valid ? answer.value : 0) + ")");
+            marker.symbol.setAttribute("fill", valid ? config.series[cell.series].fill : "white");
+            marker.symbol.setAttribute("stroke-dasharray", valid ? "none" : "3 2");
+            marker.group.setAttribute("aria-valuenow", valid ? answer.value : 0);
+            marker.group.setAttribute("aria-valuetext", valid ? format(answer.value) : "Not answered; starting position zero");
+            marker.tooltip.textContent = marker.label + ": " + (valid ? format(answer.value) : "not answered");
+        });
+        status.className = "sp-status" + (firstError ? " sp-error" : "");
+        status.textContent = firstError || (answered + " of " + count + " predictions entered. " + (answered === count ? "You can continue." : "Enter every prediction before continuing."));
+        // Put this question alone on its page; it controls that page's Next button.
+        if (answered === count && !firstError) question.enableNextButton();
+        else question.disableNextButton();
+    }
+    function setAnswer(i, value) {
+        var input = cells[i].input;
+        if (value === null) input.value = "";
+        else {
+            var rounded = config.min + Math.round((value - config.min) / config.step) * config.step;
+            input.value = format(Math.min(config.max, Math.max(config.min, rounded)));
+        }
+        // Notify Qualtrics as well as the graph when a marker changes an answer.
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    function dragValue(event) {
+        var point = svg.createSVGPoint();
+        point.x = event.clientX;
+        point.y = event.clientY;
+        var local = point.matrixTransform(svg.getScreenCTM().inverse());
+        return config.min + (bottom - local.y) / plotHeight * (config.max - config.min);
+    }
+
+    cells.forEach(function (cell, i) {
+        var series = config.series[cell.series];
+        var x = left + (cell.period + 0.5) * (right - left) / config.periods.length + (cell.series - (config.series.length - 1) / 2) * 31;
+        var label = "Period " + config.periods[cell.period] + ", " + series.name;
+        var group = element("g", { "class": "sp-handle", tabindex: 0, role: "slider", "aria-label": label, "aria-orientation": "vertical", "aria-valuemin": config.min, "aria-valuemax": config.max });
+        var tooltip = element("title", {}, label, group);
+        element("rect", { x: -15, y: -20, width: 30, height: 40, rx: 5, fill: "transparent", "class": "sp-hit" }, undefined, group);
+        var symbol = shape(series, group, 0, 0, "white");
+        markers.push({ group: group, symbol: symbol, tooltip: tooltip, x: x, label: label });
+        cell.input.setAttribute("aria-label", label + "; " + config.unit);
+        cell.input.setAttribute("inputmode", "decimal");
+        listen(cell.input, "input", update);
+        listen(cell.input, "change", update);
+        listen(cell.input, "blur", function () {
+            var answer = read(cell.input);
+            if (answer.value !== null) setAnswer(i, answer.value);
+        });
+        listen(group, "pointerdown", function (event) {
+            if (event.button !== 0) return;
+            event.preventDefault();
+            group.focus();
+            group.setPointerCapture(event.pointerId);
+            var answer = read(cell.input);
+            // A click confirms the current value, without jumping to the edge of the hitbox.
+            activeDrag = { i: i, id: event.pointerId, start: dragValue(event), value: answer.value === null ? 0 : answer.value };
+            setAnswer(i, activeDrag.value);
+        });
+        listen(group, "pointermove", function (event) {
+            if (activeDrag && activeDrag.i === i && activeDrag.id === event.pointerId) {
+                setAnswer(i, activeDrag.value + dragValue(event) - activeDrag.start);
+            }
+        });
+        function stopDrag(event) {
+            if (activeDrag && activeDrag.id === event.pointerId) activeDrag = null;
+        }
+        listen(group, "pointerup", stopDrag);
+        listen(group, "pointercancel", stopDrag);
+        listen(group, "lostpointercapture", stopDrag);
+        listen(group, "keydown", function (event) {
+            var answer = read(cell.input);
+            var value = answer.value === null ? 0 : answer.value;
+            var step = config.step * (event.shiftKey ? 10 : 1);
+            if (event.key === "ArrowUp" || event.key === "ArrowRight") value += step;
+            else if (event.key === "ArrowDown" || event.key === "ArrowLeft") value -= step;
+            else if (event.key === "Home") value = config.min;
+            else if (event.key === "End") value = config.max;
+            else if (event.key === "Delete" || event.key === "Backspace") value = null;
+            else if (event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault();
+            setAnswer(i, value);
+        });
+    });
+    update();
+    Qualtrics.SurveyEngine.addOnUnload(function () {
+        disposers.forEach(function (dispose) { dispose(); });
+        activeDrag = null;
+    });
+});
+</script><script>
+demoReady.forEach(function(f){f.call(demoQuestion);});
+document.getElementById("ResetButton").addEventListener("click",function(){document.querySelectorAll("#QIDDEMO input").forEach(function(input){input.value="";input.dispatchEvent(new Event("input",{bubbles:true}));});document.getElementById("DemoMessage").textContent="";});
+document.getElementById("NextButton").addEventListener("click",function(){document.getElementById("DemoMessage").textContent="All 18 predictions are valid. Demo only: nothing was submitted.";});
+</script></body></html>
