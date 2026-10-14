@@ -27,6 +27,12 @@
 .practice-tasks li{margin:8px 0;padding-left:3px}
 .practice-tasks .done{color:#28633e}
 @media(max-width:650px){.prediction-question{font-size:16px}.plot-title{font-size:19px}.estimate-table th[scope=row]{font-size:11px}.row-comparison{gap:3px}.row-comparison svg{width:16px;height:16px}.estimate-table .estimate{min-width:0}.legend{font-size:12px;justify-content:center}.legend svg{width:18px;height:18px}.estimate-table th,.estimate-table td{padding-left:3px;padding-right:3px}}
+
+/* Earlier-page browsing never changes the active answer page. */
+.nav-controls{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;flex:none}
+.next-row{flex-wrap:wrap}.next-row>p{flex:1;min-width:230px}
+.locked-note{background:#edf4f8;border-left:3px solid var(--navy);padding:12px 15px;font-size:14px;margin-bottom:18px}
+@media(max-width:650px){.nav-controls{width:100%}.nav-controls button{flex:1 1 auto}.nav-controls .primary{width:auto}.nav-controls #returnButton{flex-basis:100%;order:3}.next-row>p{min-width:0}}
 </style>
 </head>
 <body>
@@ -46,7 +52,7 @@
 // DEMO SETTINGS: turn enabled to false to remove an unwanted consumption page.
 // This standalone demo does not submit data to Qualtrics or any other service.
 const SETTINGS = {
-  version: "2026-10-14-v2",
+  version: "2026-10-14-v3",
   min: -1, max: 1, tick: 0.5, step: 0.01,
   windows: ["1–2", "1–4", "1–6"],
   // Income values below illustrate the screen only; they are not study results.
@@ -105,7 +111,7 @@ const STORAGE_KEY = "sspp-slider-demo-" + SETTINGS.version + "-" + enabledPanels
 let resizeObserver = null;
 
 function newState() {
-  return {version:SETTINGS.version,startedAt:new Date().toISOString(),phase:"first",index:0,first:{},drafts:{},revised:{},revisionDrafts:{},practice:{values:Array(9).fill(""),tasks:[false,false,false],completedAt:null},revisionRequested:null,revisionChoiceAt:null,finishedAt:null};
+  return {version:SETTINGS.version,startedAt:new Date().toISOString(),phase:"first",index:0,browseIndex:null,first:{},drafts:{},revised:{},revisionDrafts:{},practice:{values:Array(9).fill(""),tasks:[false,false,false],completedAt:null},revisionSelection:null,revisionRequested:null,revisionChoiceAt:null,finishedAt:null};
 }
 function loadState() {
   try {
@@ -138,26 +144,54 @@ function rawFor(panel) {
   return target[panel.id];
 }
 function modelNote() { return '<p class="model-note">Model includes community, cohort, and period fixed effects.</p>'; }
-function currentSteps() { return state.phase==="revision"?enabledPanels.map(p=>p.id):infoScreens.concat(enabledPanels.map(p=>p.id),["revision-choice"]); }
-function setNavigation(label,handler,note,disabled=false) {
-  navigation.innerHTML='<p>'+escapeHTML(note||"")+'</p><button class="primary" id="nextButton">'+escapeHTML(label)+'</button>';
-  const next=document.getElementById("nextButton"); next.disabled=disabled; next.addEventListener("click",handler);
+function currentSteps(phase=state.phase) { return phase==="revision"?enabledPanels.map(p=>p.id):infoScreens.concat(enabledPanels.map(p=>p.id),["revision-choice"]); }
+// Survey progress stays at the current unanswered page while an earlier page is viewed.
+function activePosition() {
+  if(state.phase==="first")return state.index;
+  return currentSteps("first").length+(state.phase==="revision"?state.index:(state.revisionRequested?enabledPanels.length:0));
 }
-function advanceInfo() { state.index++;persist();render(); }
+function viewPosition() { return state.browseIndex??activePosition(); }
+function viewLocation() {
+  const position=viewPosition(),firstSteps=currentSteps("first");
+  if(position<firstSteps.length)return {phase:"first",index:position,id:firstSteps[position]};
+  const index=position-firstSteps.length;
+  if(state.revisionRequested&&index<enabledPanels.length)return {phase:"revision",index,id:enabledPanels[index].id};
+  return {phase:"finished",index:0,id:"summary"};
+}
+function goBack() {
+  if(viewPosition()===0)return;
+  state.browseIndex=viewPosition()-1;persist();render();
+}
+function returnToCurrent() { state.browseIndex=null;persist();render(); }
+function setNavigation(label,handler,note,disabled=false) {
+  navigation.innerHTML='<p>'+escapeHTML(note||"")+'</p><div class="nav-controls">'+(viewPosition()>0?'<button class="secondary" id="backButton">← Back</button>':"")+(state.browseIndex!==null?'<button class="quiet" id="returnButton">Return to current page</button>':"")+(label?'<button class="primary" id="nextButton">'+escapeHTML(label)+'</button>':"")+'</div>';
+  const next=document.getElementById("nextButton");
+  if(next){next.disabled=disabled;next.addEventListener("click",handler);}
+  document.getElementById("backButton")?.addEventListener("click",goBack);
+  document.getElementById("returnButton")?.addEventListener("click",returnToCurrent);
+}
+function advanceInfo() {
+  if(state.browseIndex!==null){
+    state.browseIndex++;
+    if(state.browseIndex>=activePosition())state.browseIndex=null;
+  } else state.index++;
+  persist();render();
+}
 function render() {
   if(resizeObserver) resizeObserver.disconnect();
   screen.replaceChildren();navigation.replaceChildren();
   document.getElementById("reviewButton").hidden=Object.keys(state.first).length===0;
-  if(state.phase==="finished") {
+  const location=viewLocation();
+  if(location.phase==="finished") {
     document.getElementById("phaseLabel").textContent="Demo complete";
     document.getElementById("stepLabel").textContent="First and revised answers preserved";
     document.getElementById("progressFill").style.width="100%";
     renderSummary();screen.focus({preventScroll:true});window.scrollTo(0,0);return;
   }
-  const steps=currentSteps(), id=steps[state.index];
-  document.getElementById("phaseLabel").textContent=state.phase==="revision"?"Revision round":"First round";
-  document.getElementById("stepLabel").textContent="Page "+(state.index+1)+" of "+steps.length;
-  document.getElementById("progressFill").style.width=((state.index+1)/steps.length*100)+"%";
+  const steps=currentSteps(location.phase),id=location.id;
+  document.getElementById("phaseLabel").textContent=(state.browseIndex!==null?"Reviewing earlier page · ":"")+(location.phase==="revision"?"Revision round":"First round");
+  document.getElementById("stepLabel").textContent="Page "+(location.index+1)+" of "+steps.length;
+  document.getElementById("progressFill").style.width=((location.index+1)/steps.length*100)+"%";
   const panel=enabledPanels.find(p=>p.id===id);
   if(panel) renderPanel(panel);
   else if(id==="tutorial") renderTutorial();
@@ -168,9 +202,8 @@ function render() {
 
 function renderInfo(id) {
   if(id==="welcome") {
-    screen.innerHTML=`<div class="kicker">About the study</div><h1>Investigating the effects of income volatility and uncertainty</h1><div class="prose"><p class="lead">How do stable, predictable, and risky income affect mental health and household consumption?</p><p>This survey gathers predictions for a study of female participants from households in rural northern Ghana (n = 2,272). Participants are randomly assigned to treatment and control arms, and data are collected through in-person and phone surveys.</p><p>The study provides temporary work stitching bags over six two-week periods. You will predict treatment effects, then have an opportunity to revise your predictions while keeping a record of your first answers.</p><details><summary>Study information and draft consent text</summary><p><strong>Grant:</strong> 1R01AG076655-01<br><strong>Authors:</strong> Heather Schofield, Vincent Somville, Leandro Carvalho, Damien de Walque, Jingyao Wei, and Nicholas Grandstaff<br><strong>Corresponding author:</strong> Heather Schofield; hws44@cornell.edu</p><p>The supplied study introduction states that the study has IRB approval from Ghana Health Services, the National Institute of Health, the Norwegian School of Economics, Cornell University, the University of Pennsylvania, the University of Southern California, and the World Bank. It describes minimal risks, compensation for participants' time, informed consent before enrollment, and de-identified personal information stored securely.</p><p>The draft survey takes about ten minutes. Predictions will be analyzed as part of an academic project. The draft describes anonymous responses and the option to withdraw by exiting before the end of the survey.</p><p><strong>In this demonstration, continuing only starts the demo; no research consent or response is submitted.</strong></p></details></div><p class="meta">Mental health first · Consumption second · Optional revision</p><button class="secondary" id="quickPreview">Preview the tutorial &amp; sliders</button>`;
-    document.getElementById("quickPreview").onclick=()=>{state.index=infoScreens.indexOf("tutorial");state.introductionSkipped=true;persist();render();};
-    setNavigation("Start demo →",advanceInfo,"The red button starts the introductory screens.");
+    screen.innerHTML=`<div class="kicker">About the study</div><h1>Investigating the effects of income volatility and uncertainty</h1><div class="prose"><p class="lead">How do stable, predictable, and risky income affect mental health and household consumption?</p><p>This survey gathers predictions for a study of female participants from households in rural northern Ghana (n = 2,272). Participants are randomly assigned to treatment and control arms, and data are collected through in-person and phone surveys.</p><p>The study provides temporary work stitching bags over six two-week periods. You will predict treatment effects, then have an opportunity to revise your predictions while keeping a record of your first answers.</p><details><summary>Study information and draft consent text</summary><p><strong>Grant:</strong> 1R01AG076655-01<br><strong>Authors:</strong> Heather Schofield, Vincent Somville, Leandro Carvalho, Damien de Walque, Jingyao Wei, and Nicholas Grandstaff<br><strong>Corresponding author:</strong> Heather Schofield; hws44@cornell.edu</p><p>The supplied study introduction states that the study has IRB approval from Ghana Health Services, the National Institute of Health, the Norwegian School of Economics, Cornell University, the University of Pennsylvania, the University of Southern California, and the World Bank. It describes minimal risks, compensation for participants' time, informed consent before enrollment, and de-identified personal information stored securely.</p><p>The draft survey takes about ten minutes. Predictions will be analyzed as part of an academic project. The draft describes anonymous responses and the option to withdraw by exiting before the end of the survey.</p><p><strong>In this demonstration, continuing only starts the demo; no research consent or response is submitted.</strong></p></details></div><p class="meta">Mental health first · Consumption second · Optional revision</p>`;
+    setNavigation("Start demo →",advanceInfo,"Start with the introduction, then complete the tutorial before making predictions.");
   }
   if(id==="design") {
     screen.innerHTML=`<div class="kicker">Study design</div><h1>Six periods, four study arms</h1><p class="lead">Work is piece-rate at a consistent payment per bag. Each period lasts two weeks.</p><p>In expectation, treated arms have the same work and earnings over the 12-week study. What differs is how work varies across time and what participants know in advance.</p><div class="arms"><div class="arm"><h2>Control</h2><p>No study work; participants are followed over the course of the study.</p></div><div class="arm s"><h2>Stable income</h2><p>Work hours and pay are fixed. The earlier study description assigns nine bags every period.</p></div><div class="arm p"><h2>Predictable income</h2><p>Work varies, but the full schedule is known in advance. The earlier description uses three or fifteen bags, with three high and three low periods.</p></div><div class="arm r"><h2>Risky income</h2><p>Work varies unpredictably. The earlier description uses a 50–50 high/low draw at the start of each period.</p></div></div><p class="small muted">The Risky arm's realized total can vary even though its expected total is the same.</p>`;
@@ -193,7 +226,7 @@ function renderInfo(id) {
     setNavigation("Continue →",advanceInfo,"This reference screen does not ask for predictions.");
   }
   if(id==="instructions") {
-    screen.innerHTML=`<div class="kicker">How predictions work</div><h1>Predict effects over three reference windows</h1><p class="lead">Each marker represents one estimated coefficient using observations pooled across the indicated periods.</p><div class="window-explain"><div><strong>1–2</strong><span>Periods 1 and 2</span></div><div><strong>1–4</strong><span>Periods 1 through 4</span></div><div><strong>1–6</strong><span>All six periods</span></div></div><div class="prose"><p>Drag the markers vertically, or enter numbers in the table. All markers start at zero but remain hollow until you explicitly answer. The scale runs from −1 to +1.</p><p><strong>First answers lock when you continue.</strong> You can inspect them through “First answers,” but you cannot edit them until the optional revision round. Your first and second answers are stored separately in this demo.</p><p>Mental health is measured for the individual. Consumption is measured for the household. This demo includes three alternative consumption pages so the team can choose between log points, standard deviations, and proportional changes.</p><p>Actual study results and mechanism-feedback materials have not been supplied, so this demo ends with a review of your predictions.</p></div>`;
+    screen.innerHTML=`<div class="kicker">How predictions work</div><h1>Predict effects over three reference windows</h1><p class="lead">Each marker represents one estimated coefficient using observations pooled across the indicated periods.</p><div class="window-explain"><div><strong>1–2</strong><span>Periods 1 and 2</span></div><div><strong>1–4</strong><span>Periods 1 through 4</span></div><div><strong>1–6</strong><span>All six periods</span></div></div><div class="prose"><p>Drag the markers vertically, or enter numbers in the table. All markers start at zero but remain hollow until you explicitly answer. The scale runs from −1 to +1.</p><p><strong>First answers lock when you continue.</strong> Use Back to reread the introduction, practice again, or view locked predictions. Your unfinished entries are kept when you go back. Locked first answers remain unchanged; the optional revision round records a separate set of answers.</p><p>Mental health is measured for the individual. Consumption is measured for the household. This demo includes three alternative consumption pages so the team can choose between log points, standard deviations, and proportional changes.</p><p>Actual study results and mechanism-feedback materials have not been supplied, so this demo ends with a review of your predictions.</p></div>`;
     setNavigation("Try the practice exercise →",advanceInfo,"Practice with fictional examples before making your first prediction.");
   }
 }
@@ -322,19 +355,31 @@ function predictionTag(panel) {
   return `Prediction ${enabledPanels.indexOf(panel)+1} of ${enabledPanels.length}${panel.alternative?" · "+panel.tag:""}`;
 }
 function renderPanel(panel) {
+  const phase=viewLocation().phase,saved=(phase==="revision"?state.revised:state.first)[panel.id];
+  if(saved){renderLockedPanel(panel,saved,phase);return;}
   const revising=state.phase==="revision",raw=rawFor(panel);
   screen.innerHTML=`<div class="kicker">${escapeHTML(predictionTag(panel))}${revising?" · Revision":""}</div>${panel.draft?'<span class="draft-tag">Proposed comparison · for discussion</span>':""}<p class="prediction-question"><strong>${escapeHTML(panel.description)}</strong></p>${panel.draft?'<div class="draft-note">'+escapeHTML(panel.draftNote)+'</div>':""}${entryHelpHTML()}${answerInterfaceHTML(panel,raw)}<details><summary>How to interpret this prediction</summary><p>${escapeHTML(panel.explanation)}</p>${modelNote()}${panel.alternative?'<p class="small muted">Alternative unit version. Keep this page or either of the other consumption versions when finalizing the survey.</p>':""}</details>${revising?'<p class="small muted">Your first answers are preserved. Change only the predictions you wish to revise; all other values carry forward.</p>':""}`;
   setNavigation(revising?"Save revision & continue →":"Lock answers & continue →",()=>commitPanel(panel),revising?"This saves a separate second answer for this page.":"Enter every estimate, including zeros, before continuing. Continuing locks this page until the optional revision round.",true);
   mountAnswerInterface(panel,raw,({complete})=>{document.getElementById("nextButton").disabled=!complete;});
 }
+function renderLockedPanel(panel,saved,phase) {
+  const revised=phase==="revision";
+  screen.innerHTML=`<div class="kicker">${escapeHTML(predictionTag(panel))}${revised?" · Revision":""}</div><p class="locked-note" role="status"><strong>Answers locked · read-only.</strong> ${revised?"These are your saved revised answers.":"These are your saved first answers."} Going back does not unlock this page.</p><p class="prediction-question"><strong>${escapeHTML(panel.description)}</strong></p>${panel.draft?'<div class="draft-note">'+escapeHTML(panel.draftNote)+'</div>':""}<div class="prediction-interface"><h1 class="plot-title">${escapeHTML(panel.title)}</h1><div id="predictionPlot" class="plot"></div><div id="predictionLegend" class="legend"></div><div class="grid-wrap">${tableHTML(panel.series,saved.values,false,panel.id)}</div></div><details><summary>How to interpret this prediction</summary><p>${escapeHTML(panel.explanation)}</p>${modelNote()}</details>`;
+  setNavigation("Continue →",advanceInfo,"You can review earlier pages. Your locked answers remain unchanged.");
+  const target=document.getElementById("predictionPlot");
+  function redraw(){drawPlot(target,panel,saved.values,false,()=>{});}
+  redraw();drawLegend(document.getElementById("predictionLegend"),panel.series);
+  resizeObserver=new ResizeObserver(redraw);resizeObserver.observe(target);
+}
 function renderTutorial() {
   const practice=state.practice;
   screen.innerHTML=`<div class="kicker">Practice · not a survey prediction</div><p class="prediction-question"><strong>Try the graph and the answer boxes before making your predictions.</strong></p><p class="small muted">These fictional examples teach the controls. The practice numbers are not suggested treatment effects and are not included in your answers.</p><ol id="practiceTasks" class="practice-tasks" aria-live="polite"></ol>${entryHelpHTML()}${answerInterfaceHTML(PRACTICE_PANEL,practice.values)}<p class="small muted">The graph and table update together. Complete the three steps above; you can leave the other boxes blank.</p>`;
-  setNavigation("Start my predictions →",()=>{
-    if(!practice.tasks.every(Boolean))return;
-    state.practice={values:Array(9).fill(""),tasks:[false,false,false],completedAt:new Date().toISOString()};
+  if(practice.completedAt)screen.insertAdjacentHTML("afterbegin",'<p class="locked-note">You have already completed the tutorial. You can practice again or continue. Your survey answers will stay unchanged.</p>');
+  setNavigation(practice.completedAt?"Continue →":"Start my predictions →",()=>{
+    if(!practice.completedAt&&!practice.tasks.every(Boolean))return;
+    state.practice={values:Array(9).fill(""),tasks:[false,false,false],completedAt:practice.completedAt||new Date().toISOString()};
     advanceInfo();
-  },"Practice entries are discarded. Your real prediction page starts blank.",true);
+  },practice.completedAt?"Practice is separate from your survey answers. You do not need to repeat it to continue.":"Practice entries are discarded. Your real prediction page starts blank.",true);
   const tasks=["Move the Example A marker for Periods 1–2 away from zero. Drag it, or select it and use an arrow key.","Enter 0.25 in the Example B box for Periods 1–4.","Confirm zero for Example C in Periods 1–6: click its hollow marker at zero, or select it and press Enter. If you moved it, first return it to zero."];
   mountAnswerInterface(PRACTICE_PANEL,practice.values,({index,value,source})=>{
     const parsed=parseAnswer(value??"");
@@ -344,10 +389,12 @@ function renderTutorial() {
       if(index===8&&source==="marker"&&parsed.value===0)practice.tasks[2]=true;
     }
     document.getElementById("practiceTasks").innerHTML=tasks.map((task,i)=>`<li class="${practice.tasks[i]?"done":""}">${practice.tasks[i]?'<strong>Done.</strong> ':""}${task}</li>`).join("");
-    document.getElementById("nextButton").disabled=!practice.tasks.every(Boolean);
+    document.getElementById("nextButton").disabled=!practice.completedAt&&!practice.tasks.every(Boolean);
   });
 }
 function commitPanel(panel) {
+  // Navigation back must never resubmit or overwrite either saved round.
+  if(state.browseIndex!==null||(state.phase==="revision"?state.revised:state.first)[panel.id])return;
   const raw=rawFor(panel),parsed=raw.map(parseAnswer);
   if(parsed.some(value=>!value.valid))return;
   const record={values:parsed.map(value=>value.value),savedAt:new Date().toISOString()};
@@ -359,14 +406,21 @@ function commitPanel(panel) {
 }
 
 function renderRevisionChoice() {
+  if(state.revisionRequested!==null){
+    screen.innerHTML=`<div class="kicker">Review your predictions</div><h1>Your revision decision</h1><p class="locked-note"><strong>Decision saved · read-only.</strong></p><p class="lead">${state.revisionRequested?"You chose to revise your answers.":"You chose to keep your first answers."}</p><p>Your first answers remain locked. Going back does not change this decision or start another revision round.</p>`;
+    setNavigation("Continue →",advanceInfo,"Your saved revision decision remains unchanged.");return;
+  }
   screen.innerHTML=`<div class="kicker">Review your predictions</div><h1>Would you like to revise your first answers?</h1><p class="lead">Your first answers are now locked and saved separately.</p><p>You can inspect them using “First answers” above. If you revise, each prediction page will reopen with its existing values, so you only need to change the estimates you want to change.</p><div class="choice-list"><label class="choice"><input type="radio" name="revise" value="yes"><div><strong>Yes, I would like to revise</strong><span>Keep my first answers and record a second set separately.</span></div></label><label class="choice"><input type="radio" name="revise" value="no"><div><strong>No, keep my first answers</strong><span>Finish with my first answers. No second set will be invented.</span></div></label></div><p class="choices-foot">Your yes/no choice is recorded. This demo does not show actual study results before the decision.</p>`;
   setNavigation("Continue →",()=>{
     const selected=screen.querySelector('input[name="revise"]:checked');if(!selected)return;
     state.revisionRequested=selected.value==="yes";state.revisionChoiceAt=new Date().toISOString();
     state.phase=state.revisionRequested?"revision":"finished";state.index=0;
     if(!state.revisionRequested)state.finishedAt=new Date().toISOString();persist();render();
-  },"The revision decision is stored with your first and second answers.",true);
-  screen.querySelectorAll('input[name="revise"]').forEach(input=>input.addEventListener("change",()=>{document.getElementById("nextButton").disabled=false;}));
+  },"The revision decision is stored with your first and second answers.",!state.revisionSelection);
+  screen.querySelectorAll('input[name="revise"]').forEach(input=>{
+    input.checked=input.value===state.revisionSelection;
+    input.addEventListener("change",()=>{state.revisionSelection=input.value;persist();document.getElementById("nextButton").disabled=false;});
+  });
 }
 function summaryHTML(includeRevised) {
   let html="";
@@ -407,10 +461,10 @@ function renderSummary() {
   screen.innerHTML=`<div class="kicker">Demo complete</div><h1>Your predictions are ready to review</h1><p class="lead">Revision requested: <strong>${state.revisionRequested?"Yes":"No"}</strong>.</p><p>${state.revisionRequested?"The first and revised values are preserved separately. Changed predictions are highlighted below.":"Your first answers are the final answers. The revised-answer fields remain blank."}</p><div class="download-row"><button class="secondary" id="downloadCSV">Download answers (CSV)</button><button class="secondary" id="downloadJSON">Download full record (JSON)</button></div><p class="small muted">Downloads stay under your control. This demo has not sent answers to the study team or Qualtrics.</p>${summaryHTML(true)}`;
   document.getElementById("downloadCSV").onclick=()=>download("sspp-demo-answers.csv",csvData(exportData()),"text/csv;charset=utf-8");
   document.getElementById("downloadJSON").onclick=()=>download("sspp-demo-answers.json",JSON.stringify(exportData(),null,2),"application/json");
-  navigation.innerHTML='<p>The study-results and mechanism-feedback screens can be added when their content is available.</p>';
+  setNavigation("",null,"You can go back to review the introduction, tutorial, and locked answers.");
 }
 function openDialog(title,html) {document.getElementById("dialogTitle").textContent=title;document.getElementById("dialogBody").innerHTML=html;dialog.showModal();}
-document.getElementById("faqButton").onclick=()=>openDialog("FAQ & reference",`<div class="faq-body"><h2>What do the treatment arms mean?</h2><p>Control receives no study work. Stable receives fixed work. Predictable receives varying work with the schedule known in advance. Risky receives varying work revealed at the start of each period. Unstable pools Predictable and Risky.</p><h2>What do 1–2, 1–4, and 1–6 mean?</h2><p>They are pooled reference windows: the first two, first four, and all six two-week periods. They are not six individual-period predictions or the sum of the coefficients.</p><h2>Which units should I enter?</h2><p>Mental health uses standard deviations. Consumption is shown in three alternative versions: log points, standard deviations, and proportional changes. The version appears above each graph. A 0.10 proportional change is 10%; 0.10 log points is approximately 10.5%.</p><h2>Does a positive mental-health value mean better health?</h2><p>It means a higher index value. The scoring direction is not defined in the supplied revision and must be added before fielding.</p><h2>What happens to my first answers?</h2><p>They lock when you continue. “First answers” is read-only. Choosing to revise starts a separate round with copies of your first answers. Choosing not to revise leaves the second-answer fields empty.</p><h2>How do matched-calendar drafts work?</h2><p>MH_slider_3 proposes Predictable − Risky for the same realized full calendar. MH_slider_4 proposes that contrast separately for early- and late-income calendars with three high-work periods. Early means at least two high periods in Periods 1–3; late means at least two in Periods 4–6. These proposed definitions can be revised and are not established tests of optimism or dread.</p><h2>Is the income chart actual study data?</h2><p>No. Its GHC ${SETTINGS.income.ghcPerBag} per bag and calendars are illustrative. Study income and compliance figures have not been supplied for this revision.</p><h2>What is included in the model?</h2><p>Community, cohort, and period fixed effects, as requested in the document. Exact matching rules and index standardization remain to be specified.</p><h2>Are my answers sent anywhere?</h2><p>No. They are saved in this browser tab where supported. Download CSV or JSON at the end to keep a copy. This prototype is not yet connected to Qualtrics.</p></div>`);
+document.getElementById("faqButton").onclick=()=>openDialog("FAQ & reference",`<div class="faq-body"><h2>What do the treatment arms mean?</h2><p>Control receives no study work. Stable receives fixed work. Predictable receives varying work with the schedule known in advance. Risky receives varying work revealed at the start of each period. Unstable pools Predictable and Risky.</p><h2>What do 1–2, 1–4, and 1–6 mean?</h2><p>They are pooled reference windows: the first two, first four, and all six two-week periods. They are not six individual-period predictions or the sum of the coefficients.</p><h2>Which units should I enter?</h2><p>Mental health uses standard deviations. Consumption is shown in three alternative versions: log points, standard deviations, and proportional changes. The version appears above each graph. A 0.10 proportional change is 10%; 0.10 log points is approximately 10.5%.</p><h2>Does a positive mental-health value mean better health?</h2><p>It means a higher index value. The scoring direction is not defined in the supplied revision and must be added before fielding.</p><h2>Can I go back?</h2><p>Yes. Use Back to revisit earlier pages, including the tutorial. Unfinished entries are kept. Submitted prediction pages and the submitted revision decision are read-only. Use Return to current page to resume where you left off.</p><h2>What happens to my first answers?</h2><p>They lock when you continue. “First answers” is read-only. Choosing to revise starts a separate round with copies of your first answers. Choosing not to revise leaves the second-answer fields empty.</p><h2>How do matched-calendar drafts work?</h2><p>MH_slider_3 proposes Predictable − Risky for the same realized full calendar. MH_slider_4 proposes that contrast separately for early- and late-income calendars with three high-work periods. Early means at least two high periods in Periods 1–3; late means at least two in Periods 4–6. These proposed definitions can be revised and are not established tests of optimism or dread.</p><h2>Is the income chart actual study data?</h2><p>No. Its GHC ${SETTINGS.income.ghcPerBag} per bag and calendars are illustrative. Study income and compliance figures have not been supplied for this revision.</p><h2>What is included in the model?</h2><p>Community, cohort, and period fixed effects, as requested in the document. Exact matching rules and index standardization remain to be specified.</p><h2>Are my answers sent anywhere?</h2><p>No. They are saved in this browser tab where supported. Download CSV or JSON at the end to keep a copy. This prototype is not yet connected to Qualtrics.</p></div>`);
 document.getElementById("reviewButton").onclick=()=>openDialog("Your locked first answers",'<p class="small muted">Read-only. The optional revision round records new values separately.</p>'+summaryHTML(false));
 document.getElementById("closeDialog").onclick=()=>dialog.close();
 document.getElementById("resetButton").onclick=()=>openDialog("Start a new demo?",'<p>This clears the answers stored for this demo in this browser tab. Download your completed answers first if you want to keep them.</p><button class="primary" id="confirmReset">Clear answers and restart</button>');
