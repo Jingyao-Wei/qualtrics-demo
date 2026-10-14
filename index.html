@@ -13,7 +13,7 @@
 .prediction-interface{--comparison-width:88px}
 .plot-title{text-align:center;padding-left:var(--comparison-width);font-size:21px;margin:22px 0 0;letter-spacing:0}
 .prediction-question{font-size:18px;line-height:1.5;margin-bottom:12px}
-.estimate-table{table-layout:fixed;margin:10px 0 20px}
+.estimate-table{table-layout:fixed;margin:0 0 16px}
 .estimate-table .comparison-column{width:var(--comparison-width,24%)}
 .estimate-table th[scope=row]{white-space:normal;font-size:13px;padding-left:0}
 .estimate-table thead th{background:transparent;font-size:14px}
@@ -52,7 +52,7 @@
 // DEMO SETTINGS: turn enabled to false to remove an unwanted consumption page.
 // This standalone demo does not submit data to Qualtrics or any other service.
 const SETTINGS = {
-  version: "2026-10-14-v3",
+  version: "2026-10-14-v5",
   min: -1, max: 1, tick: 0.5, step: 0.01,
   windows: ["1–2", "1–4", "1–6"],
   // Income values below illustrate the screen only; they are not study results.
@@ -73,28 +73,28 @@ const COLORS = {
   late: {short:"Late: P–R",label:"Late-income calendars: P − R",fill:"#6578b4",stroke:"#3b4f88",shape:"square"}
 };
 const PANELS = [
-  {id:"MH_slider_1",enabled:false,section:"Mental health",title:"Stable and unstable income",tag:"Prediction 1 · Mental health",unit:"Standard deviation changes relative to Control",unitCode:"sd",series:[COLORS.stable,COLORS.unstable],
+  {id:"MH_slider_1",enabled:false,section:"Mental health",title:"Stable and unstable income",unit:"Standard deviation changes relative to Control",unitCode:"sd",series:[COLORS.stable,COLORS.unstable],
    description:"Predict the difference in the individual mental-health index between Stable and Control, and between the pooled Predictable and Risky arms (called Unstable here) and Control.",
    explanation:"Enter one coefficient for each pooled reference window. A value of 0.20 means the mental-health index is 0.20 standard deviations higher than in Control. The direction of better mental health depends on the index's scoring; that direction is not specified in this draft."},
-  {id:"MH_slider_2",enabled:true,section:"Mental health",title:"Mental health",tag:"Mental health",unit:"Standard deviation changes relative to Control",unitCode:"sd",series:[COLORS.stable,COLORS.predictable,COLORS.risky],
+  {id:"MH_slider_2",enabled:true,section:"Mental health",title:"Mental health",unit:"Standard deviation changes relative to Control",unitCode:"sd",series:[COLORS.stable,COLORS.predictable,COLORS.risky],
    description:"How much higher or lower will the mental-health index be in each treatment arm compared with Control?",
    explanation:"These are three separate treatment–control coefficients. They do not have to add up to anything. Positive values mean a higher mental-health index, and negative values mean a lower index."},
-  {id:"MH_slider_3",enabled:true,section:"Mental health",title:"Compare matched work calendars",tag:"Prediction 3 · Mental health",unit:"Standard deviation difference: Predictable minus Risky",unitCode:"sd",series:[COLORS.matched],draft:true,
+  {id:"MH_slider_3",enabled:true,section:"Mental health",title:"Compare matched work calendars",unit:"Standard deviation difference: Predictable minus Risky",unitCode:"sd",series:[COLORS.matched],draft:true,
    description:"Suppose a participant in the Predictable arm and a participant in the Risky arm have the same realized six-period work calendar. Predict the mental-health difference between their arms over each reference window.",
    explanation:"Proposed comparison: match the full sequence of assigned work across Predictable and Risky, then predict P − R. A positive coefficient means a higher mental-health index in Predictable. The matching and estimation rules need study-team confirmation.",
    draftNote:"Working interpretation of MH_slider_3. The document requests matched calendars but does not define the exact coefficient. This draft uses Predictable − Risky within matched realized calendars."},
-  {id:"MH_slider_4",enabled:true,section:"Mental health",title:"Income timing and anticipation",tag:"Prediction 4 · Mental health",unit:"Standard deviation difference: Predictable minus Risky",unitCode:"sd",series:[COLORS.early,COLORS.late],draft:true,
+  {id:"MH_slider_4",enabled:true,section:"Mental health",title:"Income timing and anticipation",unit:"Standard deviation difference: Predictable minus Risky",unitCode:"sd",series:[COLORS.early,COLORS.late],draft:true,
    description:"Keep the matched-calendar comparison, and separate calendars with most high-work periods early in the study from calendars with most high-work periods late. Predict P − R for each group.",
    explanation:"For this proposed definition, restrict to calendars with three high-work and three low-work periods. Early means at least two high-work periods occur in Periods 1–3; late means at least two occur in Periods 4–6. Match Predictable and Risky participants on the same full calendar within each group. These comparisons may inform anticipation hypotheses; they do not by themselves isolate optimism or dread.",
    draftNote:"Working interpretation of MH_slider_4, for discussion. Early- versus late-income calendars are an editable way to explore anticipation. The document does not yet specify the optimism/dread measure."},
-  {id:"CON_slider_1_log",documentLabel:"CON_slider_1",enabled:true,section:"Consumption",title:"Household consumption",tag:"Consumption · Version A of 3",unit:"Log-point changes relative to Control",unitCode:"log_points",series:[COLORS.stable,COLORS.predictable,COLORS.risky],alternative:true,
-   description:"Predict the difference in log total household consumption between each treatment arm and Control over each reference window.",
+  {id:"CON_slider_1_log",proposalVersion:1,proposalLabel:"Log points",documentLabel:"CON_slider_1",enabled:true,section:"Consumption",title:"Household consumption",unit:"Log-point changes relative to Control",unitCode:"log_points",series:[COLORS.stable,COLORS.predictable,COLORS.risky],alternative:true,
+   description:"How much higher or lower will log total household consumption be in each treatment arm compared with Control?",
    explanation:"Enter log points: 0.10 log points corresponds to approximately 10.5% higher consumption. −0.10 corresponds to approximately 9.5% lower consumption. Zero means no difference. This is a linear axis measured in log points, not a logarithmic axis."},
-  {id:"CON_slider_1_sd",documentLabel:"CON_slider_1",enabled:true,section:"Consumption",title:"Household consumption",tag:"Consumption · Version B of 3",unit:"Standard deviation changes relative to Control",unitCode:"sd",series:[COLORS.stable,COLORS.predictable,COLORS.risky],alternative:true,
-   description:"Predict the difference in standardized total household consumption between each treatment arm and Control over each reference window.",
+  {id:"CON_slider_1_sd",proposalVersion:2,proposalLabel:"Standard deviations",documentLabel:"CON_slider_1",enabled:true,section:"Consumption",title:"Household consumption",unit:"Standard deviation changes relative to Control",unitCode:"sd",series:[COLORS.stable,COLORS.predictable,COLORS.risky],alternative:true,
+   description:"How much higher or lower will standardized total household consumption be in each treatment arm compared with Control?",
    explanation:"Enter standard deviation units: 0.20 means consumption is 0.20 standard deviations higher than in Control. −0.20 means it is 0.20 standard deviations lower. The reference sample and standardization of consumption need to be specified before fielding this version."},
-  {id:"CON_slider_1_proportion",documentLabel:"CON_slider_1",enabled:true,section:"Consumption",title:"Household consumption",tag:"Consumption · Version C of 3",unit:"Proportional changes relative to Control",unitCode:"proportion",series:[COLORS.stable,COLORS.predictable,COLORS.risky],alternative:true,
-   description:"Predict the proportional difference in total household consumption between each treatment arm and Control over each reference window.",
+  {id:"CON_slider_1_proportion",proposalVersion:3,proposalLabel:"Proportional changes",documentLabel:"CON_slider_1",enabled:true,section:"Consumption",title:"Household consumption",unit:"Proportional changes relative to Control",unitCode:"proportion",series:[COLORS.stable,COLORS.predictable,COLORS.risky],alternative:true,
+   description:"By what proportion will total household consumption be higher or lower in each treatment arm compared with Control?",
    explanation:"Enter a proportion, not a whole-number percentage: 0.10 means 10% higher consumption, −0.10 means 10% lower, and 0 means no difference. The scale −1 to +1 corresponds to −100% to +100%."}
 ];
 
@@ -143,7 +143,6 @@ function rawFor(panel) {
   if (!target[panel.id]) target[panel.id]=state.phase==="revision"?state.first[panel.id].values.map(format):Array(SETTINGS.windows.length*panel.series.length).fill("");
   return target[panel.id];
 }
-function modelNote() { return '<p class="model-note">Model includes community, cohort, and period fixed effects.</p>'; }
 function currentSteps(phase=state.phase) { return phase==="revision"?enabledPanels.map(p=>p.id):infoScreens.concat(enabledPanels.map(p=>p.id),["revision-choice"]); }
 // Survey progress stays at the current unanswered page while an earlier page is viewed.
 function activePosition() {
@@ -254,7 +253,7 @@ function drawPlot(target,panel,raw,interactive,onChange) {
   target.parentElement.style.setProperty("--comparison-width",left+"px");
   const min=panel.min??SETTINGS.min,max=panel.max??SETTINGS.max,tick=panel.tick??SETTINGS.tick;
   const y=value=>bottom-(value-min)/(max-min)*(bottom-top);
-  const svg=svgElement("svg",{viewBox:`0 0 ${width} ${height}`,role:"group","aria-label":panel.title||"Assigned study income"},target);
+  const svg=svgElement("svg",{viewBox:`0 0 ${width} ${height}`,role:"group","aria-label":panel.section||panel.title||"Assigned study income"},target);
   if(panel.unit) svgElement("text",{transform:`translate(${left-68} ${(top+bottom)/2}) rotate(-90)`,"text-anchor":"middle","font-size":11,fill:"#596b79"},svg,panel.unit);
   for(let i=0;min+i*tick<=max+0.000001;i++) {
     const value=min+i*tick;
@@ -328,8 +327,11 @@ function shapeHTML(series) {
 function entryHelpHTML() {
   return '<p id="entryHelp" class="plot-help">Drag a marker or enter a number from −1 to +1 in the box. Hollow markers are unanswered. If a marker is already at zero, click the marker to confirm zero.<br><span class="keyboard-help">Keyboard: arrows adjust, Enter confirms, Delete clears.</span></p>';
 }
-function answerInterfaceHTML(panel,raw) {
-  return `<div class="prediction-interface"><h1 class="plot-title">${escapeHTML(panel.title)}</h1><div id="predictionPlot" class="plot"></div><div id="predictionLegend" class="legend"></div><div class="grid-wrap">${tableHTML(panel.series,raw,true,panel.id)}</div></div><p id="answerStatus" class="answer-status" role="status" aria-live="polite"></p>`;
+function answerInterfaceHTML(panel,raw,editable=true) {
+  return `<div class="prediction-interface"><h1 class="plot-title">${escapeHTML(panel.section||panel.title)}</h1><div id="predictionPlot" class="plot"></div><div id="predictionLegend" class="legend"></div><div class="grid-wrap">${tableHTML(panel.series,raw,editable,panel.id)}</div></div>${editable?'<p id="answerStatus" class="answer-status" role="status" aria-live="polite"></p>':""}`;
+}
+function interpretationHTML(panel) {
+  return `<details class="interpretation"><summary>How to interpret this prediction${panel.draft?' · Proposed comparison':""}</summary><p>${escapeHTML(panel.explanation)}</p>${panel.draft?'<div class="draft-note">'+escapeHTML(panel.draftNote)+'</div>':""}</details>`;
 }
 function mountAnswerInterface(panel,raw,onUpdate) {
   // DOM rows are comparisons; response arrays remain indexed by window then comparison.
@@ -352,19 +354,23 @@ function mountAnswerInterface(panel,raw,onUpdate) {
   resizeObserver=new ResizeObserver(redraw);resizeObserver.observe(target);
 }
 function predictionTag(panel) {
-  return `Prediction ${enabledPanels.indexOf(panel)+1} of ${enabledPanels.length}${panel.alternative?" · "+panel.tag:""}`;
+  return `Prediction ${enabledPanels.indexOf(panel)+1}`;
+}
+function proposalBadgeHTML(panel) {
+  const label=panel.proposalVersion?`Proposal · Version ${panel.proposalVersion} · ${panel.proposalLabel}`:panel.draft?`Proposed comparison · ${panel.title}`:"";
+  return label?`<div class="draft-tag proposal-label">${escapeHTML(label)}</div>`:"";
 }
 function renderPanel(panel) {
   const phase=viewLocation().phase,saved=(phase==="revision"?state.revised:state.first)[panel.id];
   if(saved){renderLockedPanel(panel,saved,phase);return;}
   const revising=state.phase==="revision",raw=rawFor(panel);
-  screen.innerHTML=`<div class="kicker">${escapeHTML(predictionTag(panel))}${revising?" · Revision":""}</div>${panel.draft?'<span class="draft-tag">Proposed comparison · for discussion</span>':""}<p class="prediction-question"><strong>${escapeHTML(panel.description)}</strong></p>${panel.draft?'<div class="draft-note">'+escapeHTML(panel.draftNote)+'</div>':""}${entryHelpHTML()}${answerInterfaceHTML(panel,raw)}<details><summary>How to interpret this prediction</summary><p>${escapeHTML(panel.explanation)}</p>${modelNote()}${panel.alternative?'<p class="small muted">Alternative unit version. Keep this page or either of the other consumption versions when finalizing the survey.</p>':""}</details>${revising?'<p class="small muted">Your first answers are preserved. Change only the predictions you wish to revise; all other values carry forward.</p>':""}`;
+  screen.innerHTML=`<div class="kicker">${escapeHTML(predictionTag(panel))}</div>${proposalBadgeHTML(panel)}<p class="prediction-question"><strong>${escapeHTML(panel.description)}</strong></p>${entryHelpHTML()}${answerInterfaceHTML(panel,raw)}${interpretationHTML(panel)}${revising?'<p class="small muted">Your first answers are preserved. Change only the predictions you wish to revise; all other values carry forward.</p>':""}`;
   setNavigation(revising?"Save revision & continue →":"Lock answers & continue →",()=>commitPanel(panel),revising?"This saves a separate second answer for this page.":"Enter every estimate, including zeros, before continuing. Continuing locks this page until the optional revision round.",true);
   mountAnswerInterface(panel,raw,({complete})=>{document.getElementById("nextButton").disabled=!complete;});
 }
 function renderLockedPanel(panel,saved,phase) {
   const revised=phase==="revision";
-  screen.innerHTML=`<div class="kicker">${escapeHTML(predictionTag(panel))}${revised?" · Revision":""}</div><p class="locked-note" role="status"><strong>Answers locked · read-only.</strong> ${revised?"These are your saved revised answers.":"These are your saved first answers."} Going back does not unlock this page.</p><p class="prediction-question"><strong>${escapeHTML(panel.description)}</strong></p>${panel.draft?'<div class="draft-note">'+escapeHTML(panel.draftNote)+'</div>':""}<div class="prediction-interface"><h1 class="plot-title">${escapeHTML(panel.title)}</h1><div id="predictionPlot" class="plot"></div><div id="predictionLegend" class="legend"></div><div class="grid-wrap">${tableHTML(panel.series,saved.values,false,panel.id)}</div></div><details><summary>How to interpret this prediction</summary><p>${escapeHTML(panel.explanation)}</p>${modelNote()}</details>`;
+  screen.innerHTML=`<div class="kicker">${escapeHTML(predictionTag(panel))}</div>${proposalBadgeHTML(panel)}<p class="locked-note" role="status"><strong>Answers locked · read-only.</strong> ${revised?"These are your saved revised answers.":"These are your saved first answers."} Going back does not unlock this page.</p><p class="prediction-question"><strong>${escapeHTML(panel.description)}</strong></p>${answerInterfaceHTML(panel,saved.values,false)}${interpretationHTML(panel)}`;
   setNavigation("Continue →",advanceInfo,"You can review earlier pages. Your locked answers remain unchanged.");
   const target=document.getElementById("predictionPlot");
   function redraw(){drawPlot(target,panel,saved.values,false,()=>{});}
@@ -427,7 +433,7 @@ function summaryHTML(includeRevised) {
   enabledPanels.forEach(panel=>{
     if(!state.first[panel.id])return;
     const first=state.first[panel.id].values,revised=state.revised[panel.id]?.values;
-    html+=`<section class="summary-card"><h2>${escapeHTML(predictionTag(panel))} — ${escapeHTML(panel.title)}</h2><p class="small muted">${escapeHTML(panel.unit)}${panel.draft?" · Proposed contrast":""}</p><div class="grid-wrap"><table class="summary-table"><thead><tr><th>Periods</th><th>Comparison</th><th>First</th>${includeRevised?"<th>Revised</th><th>Final</th>":""}</tr></thead><tbody>`;
+    html+=`<section class="summary-card"><h2>${escapeHTML(predictionTag(panel))}</h2>${proposalBadgeHTML(panel)}<p class="small muted">${escapeHTML(panel.section)} · ${escapeHTML(panel.unit)}${panel.draft?" · Proposed comparison":""}</p><div class="grid-wrap"><table class="summary-table"><thead><tr><th>Periods</th><th>Comparison</th><th>First</th>${includeRevised?"<th>Revised</th><th>Final</th>":""}</tr></thead><tbody>`;
     first.forEach((value,i)=>{
       const changed=revised&&revised[i]!==value;
       html+=`<tr${changed?' class="changed"':""}><td>${SETTINGS.windows[Math.floor(i/panel.series.length)]}</td><td>${escapeHTML(panel.series[i%panel.series.length].label)}</td><td>${format(value)}</td>${includeRevised?'<td>'+(revised?format(revised[i]):"—")+'</td><td>'+format(revised?revised[i]:value)+'</td>':""}</tr>`;
@@ -441,7 +447,7 @@ function exportData() {
     started_at:state.startedAt,finished_at:state.finishedAt,
     revision_requested:state.revisionRequested,revision_choice_at:state.revisionChoiceAt,
     windows:SETTINGS.windows,axis:{min:SETTINGS.min,max:SETTINGS.max,step:SETTINGS.step},
-    panels:enabledPanels.map(panel=>({id:panel.id,document_label:panel.documentLabel||panel.id,title:panel.title,unit:panel.unitCode,unit_label:panel.unit,proposed:!!panel.draft,alternative_version:!!panel.alternative,contrasts:panel.series.map(s=>s.label),definition:panel.explanation,first_saved_at:state.first[panel.id]?.savedAt||null,revised_saved_at:state.revised[panel.id]?.savedAt||null,
+    panels:enabledPanels.map(panel=>({id:panel.id,document_label:panel.documentLabel||panel.id,title:panel.title,unit:panel.unitCode,unit_label:panel.unit,proposed:!!panel.draft,alternative_version:!!panel.alternative,proposal_version:panel.proposalVersion||null,proposal_label:panel.proposalLabel||null,contrasts:panel.series.map(s=>s.label),definition:panel.explanation,first_saved_at:state.first[panel.id]?.savedAt||null,revised_saved_at:state.revised[panel.id]?.savedAt||null,
       responses:SETTINGS.windows.flatMap((window,r)=>panel.series.map((series,s)=>{
         const i=r*panel.series.length+s,first=state.first[panel.id]?.values[i]??null,second=state.revised[panel.id]?.values[i]??null;
         return {window,contrast:series.label,first,revised:second,final:second===null?first:second,changed:second===null?false:second!==first};
@@ -464,7 +470,7 @@ function renderSummary() {
   setNavigation("",null,"You can go back to review the introduction, tutorial, and locked answers.");
 }
 function openDialog(title,html) {document.getElementById("dialogTitle").textContent=title;document.getElementById("dialogBody").innerHTML=html;dialog.showModal();}
-document.getElementById("faqButton").onclick=()=>openDialog("FAQ & reference",`<div class="faq-body"><h2>What do the treatment arms mean?</h2><p>Control receives no study work. Stable receives fixed work. Predictable receives varying work with the schedule known in advance. Risky receives varying work revealed at the start of each period. Unstable pools Predictable and Risky.</p><h2>What do 1–2, 1–4, and 1–6 mean?</h2><p>They are pooled reference windows: the first two, first four, and all six two-week periods. They are not six individual-period predictions or the sum of the coefficients.</p><h2>Which units should I enter?</h2><p>Mental health uses standard deviations. Consumption is shown in three alternative versions: log points, standard deviations, and proportional changes. The version appears above each graph. A 0.10 proportional change is 10%; 0.10 log points is approximately 10.5%.</p><h2>Does a positive mental-health value mean better health?</h2><p>It means a higher index value. The scoring direction is not defined in the supplied revision and must be added before fielding.</p><h2>Can I go back?</h2><p>Yes. Use Back to revisit earlier pages, including the tutorial. Unfinished entries are kept. Submitted prediction pages and the submitted revision decision are read-only. Use Return to current page to resume where you left off.</p><h2>What happens to my first answers?</h2><p>They lock when you continue. “First answers” is read-only. Choosing to revise starts a separate round with copies of your first answers. Choosing not to revise leaves the second-answer fields empty.</p><h2>How do matched-calendar drafts work?</h2><p>MH_slider_3 proposes Predictable − Risky for the same realized full calendar. MH_slider_4 proposes that contrast separately for early- and late-income calendars with three high-work periods. Early means at least two high periods in Periods 1–3; late means at least two in Periods 4–6. These proposed definitions can be revised and are not established tests of optimism or dread.</p><h2>Is the income chart actual study data?</h2><p>No. Its GHC ${SETTINGS.income.ghcPerBag} per bag and calendars are illustrative. Study income and compliance figures have not been supplied for this revision.</p><h2>What is included in the model?</h2><p>Community, cohort, and period fixed effects, as requested in the document. Exact matching rules and index standardization remain to be specified.</p><h2>Are my answers sent anywhere?</h2><p>No. They are saved in this browser tab where supported. Download CSV or JSON at the end to keep a copy. This prototype is not yet connected to Qualtrics.</p></div>`);
+document.getElementById("faqButton").onclick=()=>openDialog("FAQ & reference",`<div class="faq-body"><h2>What do the treatment arms mean?</h2><p>Control receives no study work. Stable receives fixed work. Predictable receives varying work with the schedule known in advance. Risky receives varying work revealed at the start of each period. Unstable pools Predictable and Risky.</p><h2>What do 1–2, 1–4, and 1–6 mean?</h2><p>They are pooled reference windows: the first two, first four, and all six two-week periods. They are not six individual-period predictions or the sum of the coefficients.</p><h2>Which units should I enter?</h2><p>Mental health uses standard deviations. Consumption is shown in three alternative versions: log points, standard deviations, and proportional changes. Read the units on the vertical axis and the explanation below the table. A 0.10 proportional change is 10%; 0.10 log points is approximately 10.5%.</p><h2>Does a positive mental-health value mean better health?</h2><p>It means a higher index value. The scoring direction is not defined in the supplied revision and must be added before fielding.</p><h2>Can I go back?</h2><p>Yes. Use Back to revisit earlier pages, including the tutorial. Unfinished entries are kept. Submitted prediction pages and the submitted revision decision are read-only. Use Return to current page to resume where you left off.</p><h2>What happens to my first answers?</h2><p>They lock when you continue. “First answers” is read-only. Choosing to revise starts a separate round with copies of your first answers. Choosing not to revise leaves the second-answer fields empty.</p><h2>How do matched-calendar drafts work?</h2><p>MH_slider_3 proposes Predictable − Risky for the same realized full calendar. MH_slider_4 proposes that contrast separately for early- and late-income calendars with three high-work periods. Early means at least two high periods in Periods 1–3; late means at least two in Periods 4–6. These proposed definitions can be revised and are not established tests of optimism or dread.</p><h2>Is the income chart actual study data?</h2><p>No. Its GHC ${SETTINGS.income.ghcPerBag} per bag and calendars are illustrative. Study income and compliance figures have not been supplied for this revision.</p><h2>What is included in the model?</h2><p>Community, cohort, and period fixed effects, as requested in the document. Exact matching rules and index standardization remain to be specified.</p><h2>Are my answers sent anywhere?</h2><p>No. They are saved in this browser tab where supported. Download CSV or JSON at the end to keep a copy. This prototype is not yet connected to Qualtrics.</p></div>`);
 document.getElementById("reviewButton").onclick=()=>openDialog("Your locked first answers",'<p class="small muted">Read-only. The optional revision round records new values separately.</p>'+summaryHTML(false));
 document.getElementById("closeDialog").onclick=()=>dialog.close();
 document.getElementById("resetButton").onclick=()=>openDialog("Start a new demo?",'<p>This clears the answers stored for this demo in this browser tab. Download your completed answers first if you want to keep them.</p><button class="primary" id="confirmReset">Clear answers and restart</button>');
