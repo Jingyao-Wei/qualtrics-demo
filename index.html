@@ -52,7 +52,7 @@
 // DEMO SETTINGS: turn enabled to false to remove an unwanted consumption page.
 // This standalone demo does not submit data to Qualtrics or any other service.
 const SETTINGS = {
-  version: "2026-10-14-v5",
+  version: "2026-10-14-v6",
   min: -1, max: 1, tick: 0.5, step: 0.01,
   windows: ["1–2", "1–4", "1–6"],
   // Income values below illustrate the screen only; they are not study results.
@@ -74,27 +74,27 @@ const COLORS = {
 };
 const PANELS = [
   {id:"MH_slider_1",enabled:false,section:"Mental health",title:"Stable and unstable income",unit:"Standard deviation changes relative to Control",unitCode:"sd",series:[COLORS.stable,COLORS.unstable],
-   description:"Predict the difference in the individual mental-health index between Stable and Control, and between the pooled Predictable and Risky arms (called Unstable here) and Control.",
+   description:"How much higher or lower will the mental-health index be in the Stable arm and the pooled Unstable group compared with Control?",
    explanation:"Enter one coefficient for each pooled reference window. A value of 0.20 means the mental-health index is 0.20 standard deviations higher than in Control. The direction of better mental health depends on the index's scoring; that direction is not specified in this draft."},
   {id:"MH_slider_2",enabled:true,section:"Mental health",title:"Mental health",unit:"Standard deviation changes relative to Control",unitCode:"sd",series:[COLORS.stable,COLORS.predictable,COLORS.risky],
    description:"How much higher or lower will the mental-health index be in each treatment arm compared with Control?",
    explanation:"These are three separate treatment–control coefficients. They do not have to add up to anything. Positive values mean a higher mental-health index, and negative values mean a lower index."},
   {id:"MH_slider_3",enabled:true,section:"Mental health",title:"Compare matched work calendars",unit:"Standard deviation difference: Predictable minus Risky",unitCode:"sd",series:[COLORS.matched],draft:true,
-   description:"Suppose a participant in the Predictable arm and a participant in the Risky arm have the same realized six-period work calendar. Predict the mental-health difference between their arms over each reference window.",
+   description:"How much higher or lower will the mental-health index be in the Predictable arm compared with the Risky arm, among participants with the same realized six-period work calendar?",
    explanation:"Proposed comparison: match the full sequence of assigned work across Predictable and Risky, then predict P − R. A positive coefficient means a higher mental-health index in Predictable. The matching and estimation rules need study-team confirmation.",
    draftNote:"Working interpretation of MH_slider_3. The document requests matched calendars but does not define the exact coefficient. This draft uses Predictable − Risky within matched realized calendars."},
   {id:"MH_slider_4",enabled:true,section:"Mental health",title:"Income timing and anticipation",unit:"Standard deviation difference: Predictable minus Risky",unitCode:"sd",series:[COLORS.early,COLORS.late],draft:true,
-   description:"Keep the matched-calendar comparison, and separate calendars with most high-work periods early in the study from calendars with most high-work periods late. Predict P − R for each group.",
+   description:"How much higher or lower will the mental-health index be in the Predictable arm compared with the Risky arm, among participants with the same realized six-period work calendar, separately for early- and late-income calendars?",
    explanation:"For this proposed definition, restrict to calendars with three high-work and three low-work periods. Early means at least two high-work periods occur in Periods 1–3; late means at least two occur in Periods 4–6. Match Predictable and Risky participants on the same full calendar within each group. These comparisons may inform anticipation hypotheses; they do not by themselves isolate optimism or dread.",
    draftNote:"Working interpretation of MH_slider_4, for discussion. Early- versus late-income calendars are an editable way to explore anticipation. The document does not yet specify the optimism/dread measure."},
   {id:"CON_slider_1_log",proposalVersion:1,proposalLabel:"Log points",documentLabel:"CON_slider_1",enabled:true,section:"Consumption",title:"Household consumption",unit:"Log-point changes relative to Control",unitCode:"log_points",series:[COLORS.stable,COLORS.predictable,COLORS.risky],alternative:true,
-   description:"How much higher or lower will log total household consumption be in each treatment arm compared with Control?",
+   description:"How much higher or lower will total household consumption be in each treatment arm compared with Control, measured in log points?",
    explanation:"Enter log points: 0.10 log points corresponds to approximately 10.5% higher consumption. −0.10 corresponds to approximately 9.5% lower consumption. Zero means no difference. This is a linear axis measured in log points, not a logarithmic axis."},
   {id:"CON_slider_1_sd",proposalVersion:2,proposalLabel:"Standard deviations",documentLabel:"CON_slider_1",enabled:true,section:"Consumption",title:"Household consumption",unit:"Standard deviation changes relative to Control",unitCode:"sd",series:[COLORS.stable,COLORS.predictable,COLORS.risky],alternative:true,
-   description:"How much higher or lower will standardized total household consumption be in each treatment arm compared with Control?",
+   description:"How much higher or lower will total household consumption be in each treatment arm compared with Control, measured in standard deviations?",
    explanation:"Enter standard deviation units: 0.20 means consumption is 0.20 standard deviations higher than in Control. −0.20 means it is 0.20 standard deviations lower. The reference sample and standardization of consumption need to be specified before fielding this version."},
   {id:"CON_slider_1_proportion",proposalVersion:3,proposalLabel:"Proportional changes",documentLabel:"CON_slider_1",enabled:true,section:"Consumption",title:"Household consumption",unit:"Proportional changes relative to Control",unitCode:"proportion",series:[COLORS.stable,COLORS.predictable,COLORS.risky],alternative:true,
-   description:"By what proportion will total household consumption be higher or lower in each treatment arm compared with Control?",
+   description:"How much higher or lower will total household consumption be in each treatment arm compared with Control, expressed as a proportional change?",
    explanation:"Enter a proportion, not a whole-number percentage: 0.10 means 10% higher consumption, −0.10 means 10% lower, and 0 means no difference. The scale −1 to +1 corresponds to −100% to +100%."}
 ];
 
