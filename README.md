@@ -1,4 +1,9 @@
+
+
 # Revised slider demo — 12 October 2026
+
+link for the demo: https://jingyao-wei.github.io/qualtrics-demo/
+
 
 Open `index.html` in a browser. It is self-contained, works offline, and can replace the `index.html` in your existing GitHub Pages repository. No external libraries, build step, or other files are needed for the demo.
 
