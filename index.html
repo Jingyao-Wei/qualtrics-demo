@@ -41,12 +41,54 @@
 fieldset{border:1px solid var(--line);border-radius:7px;margin:18px 0;padding:15px}.reason-choice{display:block;padding:8px 0}.usd-reference{display:block;font-size:11px;color:var(--muted)}
 .field-label{display:block;font-weight:600;margin:18px 0 8px}.text-field,textarea,select{box-sizing:border-box;max-width:100%;width:100%;font:inherit;color:var(--ink);border:1px solid #b7c5d0;border-radius:6px;padding:11px}textarea{resize:vertical}.written-answer{white-space:pre-wrap}
 @media(max-width:650px){.design-table{font-size:12px}.design-table th:first-child{width:23%}.mechanism-matrix,.mechanism-matrix tbody,.mechanism-matrix tr{display:block;width:100%}.mechanism-matrix thead{display:none}.mechanism-matrix tr{padding:14px 0;border-bottom:1px solid var(--line)}.mechanism-matrix th:first-child{display:block;width:100%;font-size:14px;border:0}.mechanism-matrix td{display:inline-block;width:33.33%;padding:0;border:0}.mechanism-matrix label{display:flex;align-items:center;gap:5px;font-size:12px}.mobile-rating{display:inline}}
+/* Responsive layout: shared answers, wider touch targets, and readable phone tables. */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.shell{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+.topbar,.top-actions{flex-wrap:wrap}.brand,.prose,.choice>div{min-width:0}
+.top-actions{margin-left:auto}.quiet,.secondary,.primary{min-height:44px;white-space:normal}
+.card,.dialog-body{overflow-wrap:anywhere}.nav-controls{max-width:100%}
+select:focus-visible,textarea:focus-visible{outline:3px solid #2c73b3;outline-offset:3px}
+.graph-picker,.plot-unit,.phone-entry-help,.sign-toggle{display:none}
+.is-compact .graph-picker{display:block;margin:16px 0 8px}
+.graph-picker label{display:block;font-size:14px;font-weight:600;margin-bottom:5px}
+.graph-picker select{min-height:46px;font-size:16px;background:white}
+.graph-picker p{font-size:13px;color:var(--muted);margin:6px 0}
+.is-compact .plot-title{padding-left:0}.is-compact .plot-unit{display:block;text-align:center;font-size:14px;color:var(--muted);margin:8px 0 0}
+.is-compact .phone-entry-help{display:block;font-size:13px;color:var(--muted);margin:10px 0}
+.is-compact .sign-toggle{display:block;width:100%;max-width:155px;min-height:44px;margin:5px auto 0;border:1px solid var(--line);border-radius:6px;background:#f4f7f9;color:var(--navy);font-size:18px}
+.is-compact .estimate{min-height:46px}.is-compact .estimate-table tr.graph-selected{background:#f2f7fb}
+.is-compact .estimate-table td{vertical-align:top}.is-compact .estimate-table .usd-reference{overflow-wrap:anywhere}
+.reason-choice{display:flex;gap:10px;align-items:flex-start;min-height:44px}.reason-choice input{width:20px;height:20px;flex:none;margin-top:3px}
+dialog{max-height:87dvh}.dialog-head{flex-wrap:wrap}.dialog-head .quiet{flex-shrink:0}.dialog-body{overscroll-behavior:contain}
+@media(max-width:650px){
+  .shell{padding-top:16px;padding-bottom:max(28px,env(safe-area-inset-bottom))}.topbar{gap:12px}.brand{max-width:none;flex:1 1 190px}
+  .top-actions{flex:1 1 100%;margin:0}.top-actions button{flex:1}.card{padding:22px 14px;min-height:0}
+  .next-row{gap:14px}.nav-controls{display:grid;grid-template-columns:1fr;width:100%}.nav-controls button{width:100%}
+  .nav-controls #nextButton{order:1}.nav-controls #backButton{order:2}.nav-controls #returnButton{order:3}
+  .estimate-table th[scope=row]{font-size:12px}.estimate-table .row-comparison{flex-wrap:wrap}
+  .mechanism-matrix tr{display:flex;flex-wrap:wrap;gap:5px 0}.mechanism-matrix th:first-child{flex:0 0 100%;font-size:16px}
+  .mechanism-matrix td{width:50%;padding-right:8px}.mechanism-matrix label{min-height:46px;padding:9px 6px;font-size:14px;gap:8px}
+  .mechanism-matrix input{flex:none;width:22px;height:22px}.choice{padding:14px}.choice span{font-size:15px}
+  .design-table,.design-table tbody,.design-table tr,.design-table th,.design-table td{display:block;width:100%}
+  .design-table{font-size:15px}.design-table caption{display:block;width:100%}.design-table thead{display:none}.design-table tr{padding:14px 0;border-bottom:1px solid var(--line)}
+  .design-table th:first-child{width:100%;font-size:16px;font-weight:700;padding:0 0 6px;border:0}
+  .design-table td{padding:5px 0;border:0}.design-table td::before{display:block;font-size:12px;font-weight:700;color:var(--muted)}
+  .design-table td:nth-child(2)::before{content:'Bags per period'}.design-table td:nth-child(3)::before{content:'What is known in advance?'}
+  .summary-table{min-width:0}.summary-table thead{display:none}.summary-table,.summary-table tbody{display:block}
+  .summary-table tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .summary-table td{display:block;min-width:0;border:0;padding:4px;overflow-wrap:anywhere;text-align:left}
+  .summary-table td:nth-child(2){grid-column:2 / -1}.summary-table td::before{display:block;content:attr(data-label);font-size:12px;color:var(--muted)}
+  .download-row{display:grid;grid-template-columns:1fr}.download-row button{width:100%}
+  .footer button{min-height:44px;font-size:13px}.window-explain{grid-template-columns:1fr}.window-explain div{padding:12px}
+  .keyboard-help{display:none}
+}
+@media(prefers-reduced-motion:reduce){.progress>span{transition:none}}
 </style>
 </head>
 <body>
 <noscript>This interactive demo needs JavaScript enabled in your browser.</noscript>
 <div class="shell">
-  <header class="topbar"><div class="brand">Income stability &amp; health<span class="version">Prediction survey · 25 October 2026 · After PI discussion</span></div><div class="top-actions"><button class="quiet" id="reviewButton" hidden>First answers</button><button class="quiet" id="faqButton">FAQ &amp; reference</button></div></header>
+  <header class="topbar"><div class="brand">Income stability &amp; health<span class="version">Prediction survey · 26 October 2026 · After PI discussion</span></div><div class="top-actions"><button class="quiet" id="reviewButton" hidden>First answers</button><button class="quiet" id="faqButton">FAQ &amp; reference</button></div></header>
   <p class="demo-strip">Interactive demo · answers stay in this browser tab and can be downloaded. Nothing is submitted.</p>
   <div class="progress-head"><span id="phaseLabel"></span><span id="stepLabel"></span></div><div class="progress"><span id="progressFill"></span></div>
   <main id="screen" class="card" tabindex="-1"></main>
@@ -60,7 +102,7 @@ fieldset{border:1px solid var(--line);border-radius:7px;margin:18px 0;padding:15
 // REVIEW SETTINGS: archived alternatives remain disabled in PANELS below.
 // This standalone demo does not submit data to Qualtrics or any other service.
 const SETTINGS = {
-  version: "2026-10-25-v8",
+  version: "2026-10-26-v9",
   min: -0.5, max: 0.5, tick: 0.25, step: 0.01,
   windows: ["1–2", "1–4", "1–6"],
   // Remaining study inputs: meeting examples are not approved numerical benchmarks.
@@ -307,12 +349,17 @@ function drawLegend(target,series) {
 function drawPlot(target,panel,raw,interactive,onChange) {
   target.replaceChildren();
   const width=Math.max(240,target.clientWidth),height=370,left=Math.min(210,Math.max(88,width*.24)),right=width,top=70,bottom=335;
-  target.parentElement.style.setProperty("--comparison-width",left+"px");
+  const container=target.parentElement,compact=width<560;
+  const selected=Number(container.querySelector('#plotSeries').value);
+  container.classList.toggle('is-compact',compact);
+  container.style.setProperty("--comparison-width",left+"px");
+  container.querySelectorAll('.estimate-table tbody tr').forEach((row,i)=>row.classList.toggle('graph-selected',compact&&i===selected));
+  drawLegend(document.getElementById('predictionLegend'),compact?[panel.series[selected]]:panel.series);
   const {min,max,tick}=plotRange(panel,raw);
   const windows=panelWindows(panel);
   const y=value=>bottom-(value-min)/(max-min)*(bottom-top);
   const svg=svgElement("svg",{viewBox:`0 0 ${width} ${height}`,role:"group","aria-label":panel.section||panel.title||"Assigned study income"},target);
-  if(panel.unit) svgElement("text",{transform:`translate(${left-68} ${(top+bottom)/2}) rotate(-90)`,"text-anchor":"middle","font-size":11,fill:"#596b79"},svg,panel.unit);
+  if(panel.unit&&!compact) svgElement("text",{transform:`translate(${left-68} ${(top+bottom)/2}) rotate(-90)`,"text-anchor":"middle","font-size":11,fill:"#596b79"},svg,panel.unit);
   for(let i=0;min+i*tick<=max+0.000001;i++) {
     const value=min+i*tick;
     svgElement("line",{x1:left,x2:right,y1:y(value),y2:y(value),stroke:Math.abs(value)<0.000001?"#788895":"#e4e8ec","stroke-width":Math.abs(value)<0.000001?1.5:1},svg);
@@ -327,14 +374,17 @@ function drawPlot(target,panel,raw,interactive,onChange) {
   const nodes=[];
   raw.forEach((value,i)=>{
     const r=Math.floor(i/panel.series.length),s=i%panel.series.length,series=panel.series[s];
+    if(compact&&s!==selected)return;
     const spacing=Math.min(width<500?22:32,(groupWidth-8)/panel.series.length);
-    const x=left+(r+.5)*groupWidth+(s-(panel.series.length-1)/2)*spacing;
+    const x=left+(r+.5)*groupWidth+(compact?0:(s-(panel.series.length-1)/2)*spacing);
     const label=`Periods ${windows[r]}, ${series.label}`;
     const group=svgElement("g",interactive?{class:"handle",tabindex:0,role:"slider","aria-label":label,"aria-orientation":"vertical","aria-valuemin":min,"aria-valuemax":max}:{role:"img","aria-label":label},svg);
     const title=svgElement("title",{},group,label);
-    if(interactive) svgElement("rect",{x:-spacing/2,y:-21,width:spacing,height:42,rx:4,fill:"transparent",class:"hit"},group);
+    const hitWidth=compact?44:spacing;
+    if(interactive) svgElement("rect",{x:-hitWidth/2,y:-22,width:hitWidth,height:44,rx:4,fill:"transparent",class:"hit"},group);
     const symbol=drawShape(group,series,0,0,series.fill);
-    nodes.push({group,symbol,title,x,label,series});
+    if(compact)symbol.setAttribute('transform','scale(1.3)');
+    nodes[i]={group,symbol,title,x,label,series};
     if(!interactive) return;
     let drag=null;
     function pointValue(event) { const point=svg.createSVGPoint();point.x=event.clientX;point.y=event.clientY;const local=point.matrixTransform(svg.getScreenCTM().inverse());return min+(bottom-local.y)/(bottom-top)*(max-min); }
@@ -374,7 +424,7 @@ function tableHTML(panel,values,editable,prefix) {
     html+='<tr><th scope="row"><span class="row-comparison">'+shapeHTML(s)+'<span>'+escapeHTML(s.label)+'</span></span></th>';
     windows.forEach((window,r)=>{
       const i=r*series.length+c;
-      html+='<td>'+(editable?'<input class="estimate" type="text" inputmode="decimal" autocomplete="off" id="'+prefix+'_'+i+'" data-cell="'+i+'" value="'+escapeHTML(values[i])+'" aria-label="Periods '+window+', '+escapeHTML(s.label)+'" aria-describedby="entryHelp">':(values[i]===null?'—':escapeHTML(format(values[i]))))+(panel.money?'<small class="usd-reference" data-usd-cell="'+i+'">'+(parseAnswer(values[i],panel).valid?escapeHTML(usdDisplay(Number(values[i]))):'')+'</small>':'')+'</td>';
+      html+='<td>'+(editable?'<input class="estimate" type="text" inputmode="decimal" autocomplete="off" id="'+prefix+'_'+i+'" data-cell="'+i+'" value="'+escapeHTML(values[i])+'" aria-label="Periods '+window+', '+escapeHTML(s.label)+'" aria-describedby="entryHelp"><button type="button" class="sign-toggle" data-sign-cell="'+i+'" aria-label="Change sign: Periods '+window+', '+escapeHTML(s.label)+'" title="Change positive to negative or negative to positive">±</button>':(values[i]===null?'—':escapeHTML(format(values[i]))))+(panel.money?'<small class="usd-reference" data-usd-cell="'+i+'">'+(parseAnswer(values[i],panel).valid?escapeHTML(usdDisplay(Number(values[i]))):'')+'</small>':'')+'</td>';
     });html+='</tr>';
   });return html+'</tbody></table>';
 }
@@ -388,7 +438,7 @@ function entryHelpHTML(panel=PRACTICE_PANEL) {
   return '<p id="entryHelp" class="plot-help">'+instruction+' Hollow markers are unanswered. Click a marker at zero to confirm zero.<br><span class="keyboard-help">Keyboard: arrows adjust, Enter confirms, Delete clears. You can type up to two decimal places.</span></p>';
 }
 function answerInterfaceHTML(panel,raw,editable=true) {
-  return `<div class="prediction-interface"><h1 class="plot-title">${escapeHTML(panel.section||panel.title)}</h1><div id="predictionPlot" class="plot"></div><div id="predictionLegend" class="legend"></div><div class="grid-wrap">${tableHTML(panel,raw,editable,panel.id)}</div></div>${editable?'<p id="answerStatus" class="answer-status" role="status" aria-live="polite"></p>':""}`;
+  return `<div class="prediction-interface"><h1 class="plot-title">${escapeHTML(panel.section||panel.title)}</h1><div class="graph-picker"><label for="plotSeries">Comparison shown in the graph</label><select id="plotSeries">${panel.series.map((s,i)=>`<option value="${i}">${escapeHTML(s.label)}</option>`).join('')}</select><p>Choose a comparison to view its markers. All comparisons remain in the table below.</p></div><p class="plot-unit">${escapeHTML(panel.unit)}</p><div id="predictionPlot" class="plot"></div><div id="predictionLegend" class="legend"></div>${editable?'<p class="phone-entry-help">To enter a negative number, type the amount and tap ± below its box. Tap ± again to make it positive.</p>':''}<div class="grid-wrap">${tableHTML(panel,raw,editable,panel.id)}</div></div>${editable?'<p id="answerStatus" class="answer-status" role="status" aria-live="polite"></p>':""}`;
 }
 function panelContextHTML(panel) {
   const definition=panel.section==="Mental health"?'<details class="outcome-definition"'+(panel.id==="MH_slider_2"?' open':'')+'><summary>About the mental-health measure</summary><p>'+escapeHTML(SETTINGS.mentalHealthDefinition)+'</p><p class="small muted">'+escapeHTML(SETTINGS.mentalHealthPending)+'</p></details>':"";
@@ -405,6 +455,7 @@ function mountAnswerInterface(panel,raw,onUpdate) {
     if(index!==undefined){raw[index]=value;inputs[index].value=value;}
     let answered=0,firstError="";
     inputs.forEach((input,i)=>{const parsed=parseAnswer(raw[i],panel);if(parsed.valid)answered++;if(parsed.error&&!firstError)firstError=`Periods ${panelWindows(panel)[Math.floor(i/panel.series.length)]}, ${panel.series[i%panel.series.length].short}: ${parsed.error}`;input.setAttribute("aria-invalid",parsed.error?"true":"false");input.setCustomValidity(parsed.error);});
+    screen.querySelectorAll('[data-sign-cell]').forEach(button=>{const parsed=parseAnswer(raw[Number(button.dataset.signCell)],panel);button.disabled=!parsed.valid||parsed.value===0;});
     if(panel.money)screen.querySelectorAll("[data-usd-cell]").forEach(label=>{const parsed=parseAnswer(raw[Number(label.dataset.usdCell)],panel);label.textContent=parsed.valid?usdDisplay(parsed.value):"";});
     const status=document.getElementById("answerStatus");
     status.className="answer-status"+(firstError?" error":"");
@@ -415,8 +466,13 @@ function mountAnswerInterface(panel,raw,onUpdate) {
   }
   inputs.forEach((input,i)=>{input.addEventListener("input",()=>update(i,input.value,"box"));input.addEventListener("blur",()=>{const parsed=parseAnswer(input.value,panel);if(parsed.valid)update(i,format(parsed.value),"format");});});
   const target=document.getElementById("predictionPlot");
+  const picker=document.getElementById('plotSeries');
   function redraw(){refreshPlot=drawPlot(target,panel,raw,true,update);}
-  redraw();drawLegend(document.getElementById("predictionLegend"),panel.series);update();
+  function showComparison(index){const selected=String(index%panel.series.length);if(picker.value!==selected){picker.value=selected;redraw();}}
+  picker.addEventListener('change',redraw);
+  inputs.forEach((input,i)=>input.addEventListener('focus',()=>showComparison(i)));
+  screen.querySelectorAll('[data-sign-cell]').forEach(button=>button.addEventListener('click',()=>{const i=Number(button.dataset.signCell),parsed=parseAnswer(raw[i],panel);if(parsed.valid){showComparison(i);update(i,format(-parsed.value),'box');}}));
+  redraw();update();
   resizeObserver=new ResizeObserver(redraw);resizeObserver.observe(target);
 }
 function predictionTag(panel) {
@@ -440,7 +496,8 @@ function renderLockedPanel(panel,saved,phase) {
   setNavigation("Continue →",advanceInfo,"You can review earlier pages. Your locked answers remain unchanged.");
   const target=document.getElementById("predictionPlot");
   function redraw(){drawPlot(target,panel,saved.values,false,()=>{});}
-  redraw();drawLegend(document.getElementById("predictionLegend"),panel.series);
+  document.getElementById('plotSeries').addEventListener('change',redraw);
+  redraw();
   resizeObserver=new ResizeObserver(redraw);resizeObserver.observe(target);
 }
 function renderTutorial() {
@@ -555,7 +612,7 @@ function summaryHTML(includeRevised) {
     html+=`<section class="summary-card"><h2>${escapeHTML(predictionTag(panel))}</h2>${proposalBadgeHTML(panel)}<p class="small muted">${escapeHTML(panel.section)} · ${escapeHTML(panel.unit)}${panel.draft?" · Proposed comparison":""}</p><div class="grid-wrap"><table class="summary-table"><thead><tr><th>Periods</th><th>Comparison</th><th>First</th>${includeRevised?"<th>Revised</th><th>Final</th>":""}</tr></thead><tbody>`;
     first.forEach((value,i)=>{
       const changed=revised&&revised[i]!==value;
-      html+=`<tr${changed?' class="changed"':""}><td>${panelWindows(panel)[Math.floor(i/panel.series.length)]}</td><td>${escapeHTML(panel.series[i%panel.series.length].label)}</td><td>${format(value)}</td>${includeRevised?'<td>'+(revised?format(revised[i]):"—")+'</td><td>'+format(revised?revised[i]:value)+'</td>':""}</tr>`;
+      html+=`<tr${changed?' class="changed"':""}><td data-label="Periods">${panelWindows(panel)[Math.floor(i/panel.series.length)]}</td><td data-label="Comparison">${escapeHTML(panel.series[i%panel.series.length].label)}</td><td data-label="First">${format(value)}</td>${includeRevised?'<td data-label="Revised">'+(revised?format(revised[i]):"—")+'</td><td data-label="Final">'+format(revised?revised[i]:value)+'</td>':""}</tr>`;
     });html+='</tbody></table></div></section>';
   });return html;
 }

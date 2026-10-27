@@ -1,73 +1,75 @@
+# Prediction demo — 26 October 2026
 
+Version `2026-10-26-v9` adds desktop and phone layouts to the October 19 PI discussion version. Open `index.html` in a browser, or upload it as the default `index.html` in the existing GitHub Pages repository. It is a single file containing the interface, styles, and JavaScript; no build or external library is needed.
 
-# Revised slider demo — 12 October 2026
+The October 25 v8 release is preserved in `output/qualtrics_revised_2026_10_25`, and October 16 v7 in `output/qualtrics_revised_2026_10_16`. This update has not been published to GitHub. Upload the new `index.html` to the existing repository to keep the same demo URL, https://jingyao-wei.github.io/qualtrics-demo/. GitHub's commit history retains the old default. Version 9 uses a separate browser-session key, so existing v8 demo responses are not overwritten.
 
-link for the demo: https://jingyao-wei.github.io/qualtrics-demo/
+## Desktop and phone layout
 
+- The desktop graph shows every comparison together. When the graph area is narrower than 560 pixels, a labelled selector shows one comparison at a time with 44-pixel marker targets. All periods remain in horizontal order, and all estimates remain in the table.
+- Focusing an answer field selects its comparison in the phone graph. Choosing a comparison or resizing the window does not change any answers.
+- Phone answer fields include a ± button for entering negative values with decimal keyboards. Blank answers remain distinct from zero.
+- Study-arm information and completed-answer summaries stack into labelled blocks on phones. Mechanism ratings, navigation, downloads, and the FAQ fit narrow screens.
+- Questions, units, validation, answer locking, and separate revision records are unchanged. Existing Word/Google Docs screenshots are still the v8 review copy; they have not been replaced with this layout.
 
-Open `index.html` in a browser. It is self-contained, works offline, and can replace the `index.html` in your existing GitHub Pages repository. No external libraries, build step, or other files are needed for the demo.
+## Current sequence
 
-This version follows `Revising Sliders 10.12.26.docx` and the follow-up request to include all three consumption units on separate, easily removable pages. It is a standalone demonstration, not an installed Qualtrics survey. The earlier six-period Qualtrics question code is a separate, older version.
+1. Study context and four arms, followed by a brief implementation summary.
+2. Timing, data collection, and the cumulative 1–2, 1–4, and 1–6 reference windows.
+3. Required practice with fictional examples.
+4. Mental-health differences: three treatment arms versus Control, across three windows; −0.50 to +0.50 SD.
+5. Consumption differences: the same comparisons and windows, in GHC per household per two-week period.
+6. Proposed consumption-smoothing question: high-work minus low-work consumption within Predictable and Risky, across all six periods.
+7. Mechanism importance ratings, including Unsure and an optional additional reason.
+8. Explanations of two or three selected reasons.
+9. Additional information (explicitly pending).
+10. Choice to revise numerical predictions, followed by three revision pages if Yes.
+11. Optional age, country of residence, discipline, and professional title; then the answer summary and downloads.
 
-## Flow
+There are 20 numerical estimates per round. Mechanism questions are collected once before the information step. Back preserves drafts and displays submitted answers read-only. First and revised numerical responses remain separate. No answers are transmitted externally.
 
-1. Study introduction and draft consent information.
-2. Study arms and six two-week periods.
-3. Compliance information screen, with an explicit placeholder for actual implementation figures.
-4. Assigned study income chart in GHC, using clearly labelled illustrative numbers.
-5. Instructions on pooled windows, locking, and revisions.
-6. `MH_slider_1`: Stable–Control and pooled Unstable–Control.
-7. `MH_slider_2`: Stable–Control, Predictable–Control, Risky–Control.
-8. `MH_slider_3`: a proposed Predictable–Risky contrast within matched realized calendars.
-9. `MH_slider_4`: that proposed contrast split by early- and late-income calendars.
-10. `CON_slider_1_log`: consumption in log points.
-11. `CON_slider_1_sd`: consumption in standard deviation units.
-12. `CON_slider_1_proportion`: consumption in proportional changes.
-13. Recorded yes/no decision about revising.
-14. If yes, a second pass through the seven prediction pages with the first answers carried forward.
-15. Read-only review and optional CSV/JSON downloads.
+## Main changes
 
-“Preview the sliders” skips the information screens for convenient testing. It does not submit research consent. A FAQ and a read-only first-answer view remain available throughout prediction and revision pages.
+- Clear Mental health → Consumption → Reasons → About you section labels.
+- Mental health uses SD throughout. The definition follows the primary PHQ-2/GAD-2 index in the current analysis: higher scores mean better health, standardized against Control at baseline.
+- Consumption uses levels. The initial currency graph is −100 to +100 GHC; this is a provisional display, not a response limit. Typing larger amounts expands it. Positive values mean higher consumption; negative values mean lower consumption.
+- A consumption benchmark and USD reference sit beside consumption and in the FAQ. Missing values are labelled as pending.
+- The introduction covers home-based work, flexible hours, arms and advance knowledge before surveying and timing. The first-stage summary describes similar average income and greater variation in Predictable and Risky without invented percentages.
+- Mechanism ratings precede explanations. The draft asks for 20 words per selected reason to discourage very short answers; this threshold is editable.
+- Earlier consumption-unit alternatives and matched-calendar/early-versus-late proposals remain disabled in `PANELS`, and are omitted from the flow and downloads.
 
-## Scale and period changes
+## Inputs and decisions still needed
 
-All prediction graphs use **−1 to +1**, at increments of 0.01, and the **1–2, 1–4, 1–6 pooled reference windows** specified in the new document. These replace the old demo's asymmetric limits and six individual periods.
+- Supply the approved consumption benchmark and study earnings on the same household/time basis; verify the denominator and consumption recall period.
+- Supply the study-period USD-per-GHC factor, date, and source. No current exchange rate has been substituted.
+- Verify the qualitative first-stage summary and supply numerical results for means, variability, and crowd-out if desired.
+- Confirm the primary mental-health measure from the analysis code is the intended survey outcome.
+- Confirm total consumption versus food expenditure for the high–low question, its estimator, and the initial currency-axis display. The current question estimates a spending gap, not a consumption-to-income ratio or an arm ranking. An explicit ranking is still a proposal.
+- Review the mechanism list, wording, and explanation minimum. These are Version 1 proposals, not finalized meeting language.
+- Supply the information to reveal before revisions. The suggested “We found X; how convinced are you?” question is not included because X and the disclosure have not been agreed.
 
-Each mental-health and consumption graph notes community, cohort, and period fixed effects. There are no confidence intervals, equivalence tests, or p-values. Markers use both shapes and colours. Respondents may drag markers, type numbers, or use a keyboard. Blank is distinct from zero.
+## Editing and files
 
-The consumption pages have identical structure and scale limits, with different unit labels and explanations. The same numeric value has a different meaning on each page. The demo does not automatically convert answers between units; a standard-deviation conversion would require additional data.
+Canonical source: `code/exploratory/qualtrics_revised_2026_10_12/index.html`.
+Local preview: `code/exploratory/qualtrics_six_periods/revised.html`.
+Dated release: `output/qualtrics_revised_2026_10_26/index.html`.
 
-## Remove a consumption version
+Edit `PANELS` for questions, units, comparisons, and proposal labels; `MECHANISMS` and `RATINGS` for the importance matrix; and `renderInfo` for introduction wording. `SETTINGS.benchmark` holds `householdConsumption`, `studyIncome`, `source`, `usdPerGhc`, `exchangeRateDate`, and `exchangeRateSource`. `SETTINGS.additionalInformation` holds the approved disclosure. Update the version identifier after material changes and synchronize the three HTML copies.
 
-Open `index.html` in a text editor. Find the `PANELS` array near the start of the script. Change `enabled:true` to `enabled:false` for an unwanted page:
+The source is a standalone review demo. It is not a Qualtrics QSF import or a ready-made Qualtrics question script. Existing Word/PDF exports have not been refreshed for v9.
 
-- `CON_slider_1_log` — log points.
-- `CON_slider_1_sd` — standard deviations.
-- `CON_slider_1_proportion` — proportional changes.
+## Checks
 
-The page then disappears from both rounds, progress counts, and exports. You do not need to edit the navigation. Changing the enabled set starts a fresh browser-tab demo record. The “Version A/B/C of 3” wording is written for the three-version comparison; update those tags and the explanatory introduction if you settle on just one version for a final survey.
+Run with the bundled environment:
 
-## Editable assumptions
+```powershell
+$env:UV_CACHE_DIR = Join-Path (Get-Location) 'output/.uv-cache'
+$env:UV_PYTHON = 'C:/Users/jingy/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe'
+uv run --no-project node 'code/exploratory/qualtrics_revised_2026_10_12/test_meeting_demo.cjs'
+```
 
-- **MH_slider_3:** The document requests matched Predictable–Risky calendars but leaves the exact coefficient undefined. The demo proposes P−R within an identical realized six-period work calendar. A positive value means a higher index for Predictable.
-- **MH_slider_4:** The demo proposes the same P−R contrast separately for early- and late-income calendars. It restricts the example definition to calendars with three high-work and three low-work periods. Early means at least two high periods in Periods 1–3; late means at least two in Periods 4–6. This is an editable anticipation-related comparison, not a validated identification of optimism or dread. The exact matching rules and estimator still need specification.
-- **Mental-health direction:** Higher index values are described literally. The supplied revision does not define whether higher is better or worse; add this before fielding.
-- **Consumption comparisons:** The detailed slider instructions name S−C, P−C, and R−C, whereas the surrounding prose refers to pooled Unstable. The three consumption alternatives follow the detailed three-marker specification.
-- **Compliance:** No empirical compliance statements were invented. The requested screen identifies what information is still needed.
-- **Income:** GHC 10 per bag and the displayed calendars are illustrative, not actual study figures. The earlier Word description supplies the nine-bag Stable and three/fifteen-bag variable-work design. Replace `SETTINGS.income` with approved study inputs. The chart sums assigned income over each reference window; it does not elicit predictions or claim those incomes were earned.
-- **Study introduction:** The draft information is retained in a collapsible introduction. This prototype does not collect consent or verify the source document's factual/IRB claims.
-- **Results disclosure:** Actual study coefficients and mechanism-feedback text were not supplied, so no results are fabricated. The demo ends with the respondent's own predictions.
+Checks cover SD bounds, explicit zero versus missing, decimal currency entry and axis expansion, all 20 estimates, separate original/revised exports, mechanism and demographic records, spreadsheet-safe CSV text, and demographics routing with either revision choice.
 
-All proposed contrasts are defined in the `PANELS` array. Labels and descriptions there update the graphs, answer grids, review tables, and exports together.
+The browser walkthrough also checked the tutorial, invalid SD entry, currency expansion, draft preservation on Back, read-only first answers, mechanism ratings and Other validation, the three-reason selection limit, separate revisions, optional demographics and invalid age, and the actual JSON download. It contained 20 estimates and preserved −0.50 as the first response after revising it to 0.15. No browser errors were logged. Captured screens use fictional test answers.
 
-## What is recorded
-
-Answers are stored in this browser tab's session storage where the browser permits it. Closing the tab may remove the record; downloads provide a durable copy. Nothing is transmitted. This is a UI lock for a prototype, not protection against a person deliberately modifying browser code.
-
-Clicking “Lock answers & continue” captures a separate numeric first-answer snapshot and timestamp. Those snapshots are not overwritten by the revision round. “First answers” is read-only. The yes/no revision choice and its timestamp are captured when the decision is submitted.
-
-If revision is chosen, each page starts with the saved first answers. Editing one estimate leaves the others intact. Submitting the revision page records a second snapshot. If revision is declined, second answers stay null/blank and the final answer equals the first answer.
-
-The CSV has one row per prediction: panel ID, document label, unit, proposed-contrast flag, reference window, comparison, first answer, revised answer, final answer, changed flag, revision choice, and timestamps. JSON also includes the panel definitions and scale. With all seven prediction pages enabled, there are 51 predictions per round.
-
-To connect this design to Qualtrics, create the intended page sequence with separate storage for first and second responses and a branch on the revision choice. This standalone `index.html` is not a drop-in replacement for the old question JavaScript.
+The v9 browser walkthrough checked 320, 390, 768, and 1440-pixel viewport widths. The prediction page had no document-wide horizontal overflow, showed three mobile markers versus nine desktop markers, and retained the same answers across resizing. Pointer dragging, the required tutorial, automatic comparison selection, ± sign changes, currency expansion to ±4000, locked answers on Back, all 20 summary estimates, the No-revision route with blank demographics, and the phone FAQ were checked. No browser errors were logged. These checks use desktop Chromium at phone-sized viewports; physical iOS/Android keyboard and touch behavior still needs device testing. Screenshots are in `output/qualtrics_review_v9_screenshots`.
