@@ -110,7 +110,7 @@ dialog{max-height:87dvh}.dialog-head{flex-wrap:wrap}.dialog-head .quiet{flex-shr
 // REVIEW SETTINGS: archived alternatives remain disabled in PANELS below.
 // This standalone demo does not submit data to Qualtrics or any other service.
 const SETTINGS = {
-  version: "2026-11-02-v11.1",
+  version: "2026-11-02-v11.2",
   min: -0.5, max: 0.5, tick: 0.25, step: 0.01,
   windows: ["1–2", "1–4", "1–6"],
   // Remaining study inputs: meeting examples are not approved numerical benchmarks.
@@ -194,7 +194,7 @@ const STORAGE_KEY = "sspp-slider-demo-" + SETTINGS.version + "-" + enabledPanels
 let resizeObservers = [];
 
 function newState() {
-  return {version:SETTINGS.version,startedAt:new Date().toISOString(),phase:"first",index:0,browseIndex:null,first:{},drafts:{},revised:{},revisionDrafts:{},practice:{values:Array(9).fill(""),tasks:[false,false,false],completedAt:null},mechanismDraft:{ratings:{},other:"",otherRating:""},mechanisms:null,feedbackDraft:"",feedback:null,demographicDraft:{age:"",country:"",discipline:"",title:""},demographics:null,informationSeenAt:null,revisionSelection:null,revisionRequested:null,revisionChoiceAt:null,finishedAt:null};
+  return {version:SETTINGS.version,startedAt:new Date().toISOString(),phase:"first",index:0,browseIndex:null,first:{},drafts:{},revised:{},revisionDrafts:{},practice:{values:Array(9).fill(""),tasks:[false,false,false],completedAt:null},mechanismDraft:{ratings:{},other:"",otherRating:""},mechanisms:null,feedbackDraft:"",feedback:null,informationSeenAt:null,revisionSelection:null,revisionRequested:null,revisionChoiceAt:null,finishedAt:null};
 }
 function loadState() {
   try {
@@ -246,7 +246,7 @@ function activePosition() {
   if(state.phase==="first")return state.index;
   const firstLength=currentSteps("first").length;
   if(state.phase==="revision")return firstLength+state.index;
-  return firstLength+(state.revisionRequested?predictionPages.length:0)+(state.phase==="finished"?1:0);
+  return firstLength+(state.revisionRequested?predictionPages.length:0);
 }
 function viewPosition() { return state.browseIndex??activePosition(); }
 function viewLocation() {
@@ -254,7 +254,6 @@ function viewLocation() {
   if(position<firstSteps.length)return {phase:"first",index:position,id:firstSteps[position]};
   const index=position-firstSteps.length,revisionCount=state.revisionRequested?predictionPages.length:0;
   if(index<revisionCount)return {phase:"revision",index,id:predictionPages[index].id};
-  if(index===revisionCount)return {phase:"demographics",index:0,id:"demographics"};
   return {phase:"finished",index:0,id:"summary"};
 }
 function goBack() {
@@ -286,12 +285,6 @@ function render() {
     document.getElementById("stepLabel").textContent="First and revised answers preserved";
     document.getElementById("progressFill").style.width="100%";
     renderSummary();screen.focus({preventScroll:true});window.scrollTo(0,0);return;
-  }
-  if(location.phase==="demographics") {
-    document.getElementById("phaseLabel").textContent=state.browseIndex!==null?"Reviewing earlier page":"About you";
-    document.getElementById("stepLabel").textContent="Final page";
-    document.getElementById("progressFill").style.width="100%";
-    renderDemographics();screen.focus({preventScroll:true});window.scrollTo(0,0);return;
   }
   const steps=currentSteps(location.phase),id=location.id;
   document.getElementById("phaseLabel").textContent=(state.browseIndex!==null?"Reviewing earlier page · ":"")+(location.phase==="revision"?"Revision round":"First round");
@@ -565,7 +558,7 @@ function savePageAnswers(panel) {
 function commitPanel(panel) {
   if(!savePageAnswers(panel))return;
   state.index++;
-  if(state.phase==="revision"&&state.index>=predictionPages.length)state.phase="demographics";
+  if(state.phase==="revision"&&state.index>=predictionPages.length){state.phase="finished";state.finishedAt=new Date().toISOString();}
   persist();render();
 }
 function mechanismSummaryHTML() {
@@ -617,7 +610,8 @@ function renderRevisionChoice() {
   setNavigation("Continue →",()=>{
     const selected=screen.querySelector('input[name="revise"]:checked');if(!selected)return;
     state.revisionRequested=selected.value==="yes";state.revisionChoiceAt=new Date().toISOString();
-    state.phase=state.revisionRequested?"revision":"demographics";state.index=0;
+    state.phase=state.revisionRequested?"revision":"finished";state.index=0;
+    if(!state.revisionRequested)state.finishedAt=new Date().toISOString();
     persist();render();
   },"The revision decision is stored with your first and second answers.",!state.revisionSelection);
   screen.querySelectorAll('input[name="revise"]').forEach(input=>{
@@ -626,21 +620,6 @@ function renderRevisionChoice() {
   });
 }
 
-function demographicSummaryHTML() {
-  if(!state.demographics)return "";
-  return '<section class="summary-card"><h2>About you</h2><ul>'+['age','country','discipline','title'].map(key=>'<li>'+({age:'Age',country:'Country of residence',discipline:'Primary discipline',title:'Professional title or role'}[key])+': '+escapeHTML(state.demographics[key]||'Not provided')+'</li>').join('')+'</ul></section>';
-}
-function renderDemographics() {
-  if(state.demographics){screen.innerHTML='<div class="kicker">Part 4 · About you</div><h1>Your background</h1><p class="locked-note">Answers saved · read-only.</p>'+demographicSummaryHTML();setNavigation('Continue →',advanceInfo,'Your saved background responses remain unchanged.');return;}
-  const d=state.demographicDraft;
-  screen.innerHTML='<div class="kicker">Part 4 · About you</div><h1>A little about your background</h1><p>These questions help describe who contributed predictions. All four are optional; leave any blank if you prefer not to answer.</p><label class="field-label" for="demoAge">Age (years)</label><input class="text-field" id="demoAge" inputmode="numeric" type="text" autocomplete="off" value="'+escapeHTML(d.age)+'"><label class="field-label" for="demoCountry">Country of residence</label><input class="text-field" id="demoCountry" type="text" value="'+escapeHTML(d.country)+'"><label class="field-label" for="demoDiscipline">Primary discipline or field</label><input class="text-field" id="demoDiscipline" type="text" value="'+escapeHTML(d.discipline)+'"><label class="field-label" for="demoTitle">Professional title or role</label><input class="text-field" id="demoTitle" type="text" value="'+escapeHTML(d.title)+'"><p id="demographicStatus" class="answer-status" role="status"></p>';
-  const valid=()=>!d.age.trim()||(/^\d{1,3}$/.test(d.age.trim())&&Number(d.age)>=1&&Number(d.age)<=120);
-  setNavigation('Finish demo →',()=>{
-    if(!valid()||state.browseIndex!==null)return;
-    state.demographics={...Object.fromEntries(Object.entries(d).map(([key,value])=>[key,value.trim()])),savedAt:new Date().toISOString()};state.phase='finished';state.finishedAt=new Date().toISOString();persist();render();
-  },'You may finish with all fields blank.',!valid());
-  for(const [id,key] of [['demoAge','age'],['demoCountry','country'],['demoDiscipline','discipline'],['demoTitle','title']])document.getElementById(id).addEventListener('input',event=>{d[key]=event.target.value;const ok=valid();document.getElementById('nextButton').disabled=!ok;document.getElementById('demographicStatus').textContent=ok?'':'Enter age as a whole number from 1 to 120, or leave it blank.';document.getElementById('demoAge').setAttribute('aria-invalid',ok?'false':'true');persist();});
-}
 function summaryHTML(includeRevised) {
   let html="";
   enabledPanels.forEach(panel=>{
@@ -657,7 +636,6 @@ function exportData() {
   return {
     demo:true,specification:"Revising Sliders 10.12.26.docx",feedback:["Feedback Interface - Oct 14, 2026 LSC vs3.pdf","qualtrics_demo_2026_10_15, HS.pdf","qualtrics_demo_2026_10_15ddw.pdf","PI mtg, 2026.10.19.txt","vip-SSPP Google Doc, version Oct 26 tab, comments reviewed 2026-11-02"],version:SETTINGS.version,
     tutorial_completed_at:state.practice.completedAt,
-    demographics:state.demographics,
     general_feedback:state.feedback?{question:"Is there anything we missed?",...state.feedback}:null,
     additional_information:{provided:!!SETTINGS.additionalInformation.trim(),text:SETTINGS.additionalInformation,seen_at:state.informationSeenAt},
     started_at:state.startedAt,finished_at:state.finishedAt,
@@ -678,8 +656,8 @@ function download(name,content,type) {
   const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement("a");a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function csvData(data) {
-  const rows=[["panel_id","document_label","unit","proposed_contrast","reference_window","comparison","first_answer","revised_answer","final_answer","changed","revision_requested","first_saved_at","revised_saved_at","revision_choice_at","additional_information_provided","additional_information_seen_at","age","country_of_residence","discipline","professional_title","general_feedback","feedback_saved_at"]];
-  data.panels.forEach(panel=>panel.responses.forEach(response=>rows.push([panel.id,panel.document_label,panel.unit,panel.proposed,response.window,response.contrast,response.first,response.revised,response.final,response.changed,data.revision_requested,panel.first_saved_at,panel.revised_saved_at,data.revision_choice_at,data.additional_information.provided,data.additional_information.seen_at,data.demographics?.age,data.demographics?.country,data.demographics?.discipline,data.demographics?.title,data.general_feedback?.text,data.general_feedback?.savedAt])));
+  const rows=[["panel_id","document_label","unit","proposed_contrast","reference_window","comparison","first_answer","revised_answer","final_answer","changed","revision_requested","first_saved_at","revised_saved_at","revision_choice_at","additional_information_provided","additional_information_seen_at","general_feedback","feedback_saved_at"]];
+  data.panels.forEach(panel=>panel.responses.forEach(response=>rows.push([panel.id,panel.document_label,panel.unit,panel.proposed,response.window,response.contrast,response.first,response.revised,response.final,response.changed,data.revision_requested,panel.first_saved_at,panel.revised_saved_at,data.revision_choice_at,data.additional_information.provided,data.additional_information.seen_at,data.general_feedback?.text,data.general_feedback?.savedAt])));
   return '\ufeff'+rows.map(row=>row.map(csvCell).join(",")).join("\r\n");
 }
 
@@ -698,7 +676,7 @@ function mechanismCSV(data) {
   return '\ufeff'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n');
 }
 function renderSummary() {
-  screen.innerHTML=`<div class="kicker">Demo complete</div><h1>Your predictions are ready to review</h1><p class="lead">Revision requested: <strong>${state.revisionRequested?"Yes":"No"}</strong>.</p><p>${state.revisionRequested?"The first and revised values are preserved separately. Changed predictions are highlighted below.":"Your first answers are the final answers. The revised-answer fields remain blank."}</p><div class="download-row"><button class="secondary" id="downloadCSV">Download answers (CSV)</button><button class="secondary" id="downloadJSON">Download full record (JSON)</button><button class="secondary" id="downloadMechanisms">Download reasons (CSV)</button></div><p class="small muted">Downloads stay under your control. This demo has not sent answers to the study team or Qualtrics.</p>${summaryHTML(true)}${mechanismSummaryHTML()}${feedbackSummaryHTML()}${demographicSummaryHTML()}`;
+  screen.innerHTML=`<div class="kicker">Demo complete</div><h1>Your predictions are ready to review</h1><p class="lead">Revision requested: <strong>${state.revisionRequested?"Yes":"No"}</strong>.</p><p>${state.revisionRequested?"The first and revised values are preserved separately. Changed predictions are highlighted below.":"Your first answers are the final answers. The revised-answer fields remain blank."}</p><div class="download-row"><button class="secondary" id="downloadCSV">Download answers (CSV)</button><button class="secondary" id="downloadJSON">Download full record (JSON)</button><button class="secondary" id="downloadMechanisms">Download reasons (CSV)</button></div><p class="small muted">Downloads stay under your control. This demo has not sent answers to the study team or Qualtrics.</p>${summaryHTML(true)}${mechanismSummaryHTML()}${feedbackSummaryHTML()}`;
   document.getElementById("downloadCSV").onclick=()=>download("sspp-demo-answers.csv",csvData(exportData()),"text/csv;charset=utf-8");
   document.getElementById("downloadJSON").onclick=()=>download("sspp-demo-answers.json",JSON.stringify(exportData(),null,2),"application/json");
   document.getElementById("downloadMechanisms").onclick=()=>download("sspp-demo-reasons.csv",mechanismCSV(exportData()),"text/csv;charset=utf-8");
