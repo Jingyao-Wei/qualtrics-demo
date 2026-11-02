@@ -37,10 +37,10 @@
 .study-facts{padding-left:22px}.study-facts li{margin:9px 0}
 .design-table{table-layout:fixed}.design-table caption{text-align:left;font-size:18px;font-weight:700;padding:12px 0}.design-table th:first-child{width:20%}.design-table td{text-align:left;vertical-align:top}
 .benchmark{background:#edf4f8;border-left:3px solid var(--navy);padding:12px 16px;margin:18px 0;font-size:14px}.benchmark p{margin:6px 0}
-.mechanism-matrix th:first-child{width:32%;text-align:left}.mechanism-matrix th{font-size:12px;white-space:normal}.mechanism-matrix td{text-align:center}.mechanism-matrix input{width:19px;height:19px;accent-color:var(--navy)}.mechanism-matrix label{display:block;padding:10px 0;cursor:pointer}.mobile-rating{display:none}
+.mechanism-matrix{table-layout:fixed}.mechanism-matrix th:first-child{width:20%;text-align:left}.mechanism-matrix th{font-size:13px;white-space:normal;line-height:1.45}.mechanism-matrix td{text-align:center}.mechanism-matrix input{width:84px;max-width:100%;height:46px;padding:8px;font-size:16px;border:1px solid #a8b5c0;border-radius:6px;text-align:center}.mechanism-matrix input[aria-invalid=true],.other-rating input[aria-invalid=true]{border:2px solid #a51d34}.mobile-rating{display:none}.other-ratings{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:12px 0}.other-rating label{display:block;font-size:14px;margin-bottom:6px}.other-rating input{width:100%;max-width:140px;min-height:46px;padding:8px;font-size:16px;border:1px solid #a8b5c0;border-radius:6px}.other-rating input:disabled{background:#f4f6f8}
 fieldset{border:1px solid var(--line);border-radius:7px;margin:18px 0;padding:15px}.reason-choice{display:block;padding:8px 0}.usd-reference{display:block;font-size:11px;color:var(--muted)}
 .field-label{display:block;font-weight:600;margin:18px 0 8px}.text-field,textarea,select{box-sizing:border-box;max-width:100%;width:100%;font:inherit;color:var(--ink);border:1px solid #b7c5d0;border-radius:6px;padding:11px}textarea{resize:vertical}.written-answer{white-space:pre-wrap}
-@media(max-width:650px){.design-table{font-size:12px}.design-table th:first-child{width:23%}.mechanism-matrix,.mechanism-matrix tbody,.mechanism-matrix tr{display:block;width:100%}.mechanism-matrix thead{display:none}.mechanism-matrix tr{padding:14px 0;border-bottom:1px solid var(--line)}.mechanism-matrix th:first-child{display:block;width:100%;font-size:14px;border:0}.mechanism-matrix td{display:inline-block;width:33.33%;padding:0;border:0}.mechanism-matrix label{display:flex;align-items:center;gap:5px;font-size:12px}.mobile-rating{display:inline}}
+@media(max-width:650px){.design-table{font-size:12px}.design-table th:first-child{width:23%}.mechanism-matrix,.mechanism-matrix tbody,.mechanism-matrix tr{display:block;width:100%}.mechanism-matrix thead{display:none}.mechanism-matrix tr{padding:14px 0;border-bottom:1px solid var(--line)}.mechanism-matrix th:first-child{display:block;width:100%;font-size:16px;border:0;padding:8px 0}.mechanism-matrix td{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 0;border:0;text-align:left}.mechanism-matrix input{flex:0 0 72px;width:72px}.mechanism-matrix .mobile-rating{display:block;font-size:14px;line-height:1.45}.other-ratings{grid-template-columns:1fr}.other-rating{display:flex;align-items:center;justify-content:space-between;gap:14px}.other-rating input{width:72px;flex:none}}
 /* Responsive layout: shared answers, wider touch targets, and readable phone tables. */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .shell{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
@@ -67,9 +67,7 @@ dialog{max-height:87dvh}.dialog-head{flex-wrap:wrap}.dialog-head .quiet{flex-shr
   .next-row{gap:14px}.nav-controls{display:grid;grid-template-columns:1fr;width:100%}.nav-controls button{width:100%}
   .nav-controls #nextButton{order:1}.nav-controls #backButton{order:2}.nav-controls #returnButton{order:3}
   .estimate-table th[scope=row]{font-size:12px}.estimate-table .row-comparison{flex-wrap:wrap}
-  .mechanism-matrix tr{display:flex;flex-wrap:wrap;gap:5px 0}.mechanism-matrix th:first-child{flex:0 0 100%;font-size:16px}
-  .mechanism-matrix td{width:50%;padding-right:8px}.mechanism-matrix label{min-height:46px;padding:9px 6px;font-size:14px;gap:8px}
-  .mechanism-matrix input{flex:none;width:22px;height:22px}.choice{padding:14px}.choice span{font-size:15px}
+  .choice{padding:14px}.choice span{font-size:15px}
   .design-table,.design-table tbody,.design-table tr,.design-table th,.design-table td{display:block;width:100%}
   .design-table{font-size:15px}.design-table caption{display:block;width:100%}.design-table thead{display:none}.design-table tr{padding:14px 0;border-bottom:1px solid var(--line)}
   .design-table th:first-child{width:100%;font-size:16px;font-weight:700;padding:0 0 6px;border:0}
@@ -110,7 +108,7 @@ dialog{max-height:87dvh}.dialog-head{flex-wrap:wrap}.dialog-head .quiet{flex-shr
 // REVIEW SETTINGS: archived alternatives remain disabled in PANELS below.
 // This standalone demo does not submit data to Qualtrics or any other service.
 const SETTINGS = {
-  version: "2026-11-02-v11.2",
+  version: "2026-11-02-v12",
   min: -0.5, max: 0.5, tick: 0.25, step: 0.01,
   windows: ["1–2", "1–4", "1–6"],
   // Remaining study inputs: meeting examples are not approved numerical benchmarks.
@@ -177,7 +175,12 @@ const MECHANISMS = [
   {id:"planning_effort",label:"The mental engagement required to plan spending and manage changing income"},
   {id:"expectations",label:"Expectations or worries about future income"}
 ];
-const RATINGS = ["Not at all", "Slightly", "Moderately", "Very", "Extremely", "Unsure"];
+const MECHANISM_PAIRS = [
+  {id:"stable_predictable",label:"Stable vs Predictable"},
+  {id:"stable_risky",label:"Stable vs Risky"},
+  {id:"predictable_risky",label:"Predictable vs Risky"}
+];
+const IMPORTANCE_SCALE = {min:0,max:10,step:1,min_label:"Not important",max_label:"Extremely important"};
 
 const enabledPanels = PANELS.filter(panel=>panel.enabled);
 const predictionPages = enabledPanels.filter(panel=>!panel.pageParent);
@@ -194,7 +197,7 @@ const STORAGE_KEY = "sspp-slider-demo-" + SETTINGS.version + "-" + enabledPanels
 let resizeObservers = [];
 
 function newState() {
-  return {version:SETTINGS.version,startedAt:new Date().toISOString(),phase:"first",index:0,browseIndex:null,first:{},drafts:{},revised:{},revisionDrafts:{},practice:{values:Array(9).fill(""),tasks:[false,false,false],completedAt:null},mechanismDraft:{ratings:{},other:"",otherRating:""},mechanisms:null,feedbackDraft:"",feedback:null,informationSeenAt:null,revisionSelection:null,revisionRequested:null,revisionChoiceAt:null,finishedAt:null};
+  return {version:SETTINGS.version,startedAt:new Date().toISOString(),phase:"first",index:0,browseIndex:null,first:{},drafts:{},revised:{},revisionDrafts:{},practice:{values:Array(9).fill(""),tasks:[false,false,false],completedAt:null},mechanismDraft:{ratings:Object.fromEntries(MECHANISM_PAIRS.map(pair=>[pair.id,{}])),other:"",otherRatings:{}},mechanisms:null,feedbackDraft:"",feedback:null,informationSeenAt:null,revisionSelection:null,revisionRequested:null,revisionChoiceAt:null,finishedAt:null};
 }
 function loadState() {
   try {
@@ -561,10 +564,25 @@ function commitPanel(panel) {
   if(state.phase==="revision"&&state.index>=predictionPages.length){state.phase="finished";state.finishedAt=new Date().toISOString();}
   persist();render();
 }
+function validImportance(value) {
+  return /^(?:[0-9]|10)$/.test(String(value??""));
+}
+function mechanismsComplete(m=state.mechanismDraft) {
+  return MECHANISM_PAIRS.every(pair=>MECHANISMS.every(item=>validImportance(m.ratings[pair.id]?.[item.id]))&&(!m.other.trim()||validImportance(m.otherRatings[pair.id])));
+}
+function saveMechanisms() {
+  if(state.browseIndex!==null||state.mechanisms||state.phase!=="first"||currentSteps("first")[state.index]!=="mechanisms"||!mechanismsComplete())return false;
+  const m=state.mechanismDraft;
+  state.mechanisms={ratings:Object.fromEntries(MECHANISM_PAIRS.map(pair=>[pair.id,Object.fromEntries(MECHANISMS.map(item=>[item.id,Number(m.ratings[pair.id][item.id])]))])),other:m.other.trim(),otherRatings:m.other.trim()?Object.fromEntries(MECHANISM_PAIRS.map(pair=>[pair.id,Number(m.otherRatings[pair.id])])):{},savedAt:new Date().toISOString()};
+  return true;
+}
+function mechanismMatrixHTML(m,readonly=false) {
+  return '<div class="grid-wrap"><table class="mechanism-matrix"><thead><tr><th scope="col">Arm comparison</th>'+MECHANISMS.map(item=>'<th scope="col">'+escapeHTML(item.label)+'</th>').join('')+'</tr></thead><tbody>'+MECHANISM_PAIRS.map(pair=>'<tr><th scope="row">'+escapeHTML(pair.label)+'</th>'+MECHANISMS.map(item=>'<td><label class="mobile-rating" for="reason-'+pair.id+'-'+item.id+'">'+escapeHTML(item.label)+'</label>'+(readonly?'<strong>'+m.ratings[pair.id][item.id]+' / 10</strong>':'<input id="reason-'+pair.id+'-'+item.id+'" type="number" min="0" max="10" step="1" inputmode="numeric" data-pair="'+pair.id+'" data-reason="'+item.id+'" aria-label="'+escapeHTML(pair.label+': '+item.label)+'" aria-describedby="importanceScale" placeholder="0–10" value="'+escapeHTML(m.ratings[pair.id]?.[item.id]??'')+'">')+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+}
 function mechanismSummaryHTML() {
   if(!state.mechanisms)return "";
   const m=state.mechanisms;
-  return '<section class="summary-card"><h2>Reasons behind your mental-health predictions</h2><ul>'+MECHANISMS.map(item=>'<li>'+escapeHTML(item.label)+': <strong>'+escapeHTML(RATINGS[Number(m.ratings[item.id])])+'</strong></li>').join('')+(m.other?'<li>Other: '+escapeHTML(m.other)+' — <strong>'+escapeHTML(RATINGS[Number(m.otherRating)])+'</strong></li>':'')+'</ul>'+'</section>';
+  return '<section class="summary-card"><h2>Reasons behind your mental-health predictions</h2><p class="small">Importance: 0 = not important; 10 = extremely important.</p>'+mechanismMatrixHTML(m,true)+(m.other?'<h3>Another reason: '+escapeHTML(m.other)+'</h3><ul>'+MECHANISM_PAIRS.map(pair=>'<li>'+escapeHTML(pair.label)+': <strong>'+m.otherRatings[pair.id]+' / 10</strong></li>').join('')+'</ul>':'')+'</section>';
 }
 function renderMechanisms() {
   if(state.mechanisms) {
@@ -572,16 +590,20 @@ function renderMechanisms() {
     setNavigation("Continue →",advanceInfo,"Your saved ratings remain unchanged.");return;
   }
   const m=state.mechanismDraft;
-  screen.innerHTML='<div class="kicker">Part 3 · Reasons behind your mental-health predictions</div><h1>How important is each reason to your mental-health predictions?</h1><div class="draft-tag">Proposal · Mechanism questions · Version 2</div><p>Think about the mental-health differences you predicted across the study arms. Rate each reason independently; you do not need to rank them or use every rating.</p><p class="small muted">Review draft: the October 26 comments focus these reasons on mental health. The final list and wording, including “mental engagement”, still need PI agreement.</p><div class="grid-wrap"><table class="mechanism-matrix"><thead><tr><th scope="col">Possible reason</th>'+RATINGS.map(label=>'<th scope="col">'+label+'</th>').join('')+'</tr></thead><tbody>'+MECHANISMS.map(item=>'<tr><th scope="row">'+escapeHTML(item.label)+'</th>'+RATINGS.map((label,i)=>'<td><label><input type="radio" name="'+item.id+'" value="'+i+'" aria-label="'+escapeHTML(item.label)+': '+label+'" '+(m.ratings[item.id]===String(i)?'checked':'')+'><span class="mobile-rating">'+label+'</span></label></td>').join('')+'</tr>').join('')+'</tbody></table></div><label class="field-label" for="otherMechanism">Another reason (optional)</label><input id="otherMechanism" class="text-field" type="text" value="'+escapeHTML(m.other)+'" placeholder="Add a reason that is missing above"><label class="field-label" for="otherRating">Importance of your additional reason</label><select id="otherRating"><option value="">Choose if you added a reason</option>'+RATINGS.map((label,i)=>'<option value="'+i+'" '+(m.otherRating===String(i)?'selected':'')+'>'+label+'</option>').join('')+'</select><p id="mechanismStatus" class="answer-status" role="status"></p>';
-  const complete=()=>MECHANISMS.every(item=>Object.hasOwn(m.ratings,item.id))&&(!m.other.trim()||m.otherRating!=="");
-  setNavigation("Lock ratings & continue →",()=>{
-    if(!complete()||state.browseIndex!==null)return;
-    state.mechanisms={ratings:{...m.ratings},other:m.other.trim(),otherRating:m.other.trim()?m.otherRating:"",savedAt:new Date().toISOString()};advanceInfo();
-  },"Rate each listed reason. You can choose Unsure. An additional reason is optional.",!complete());
-  const update=()=>{document.getElementById("nextButton").disabled=!complete();document.getElementById("mechanismStatus").textContent=m.other.trim()&&!m.otherRating?"Choose the importance of your additional reason.":"";persist();};
-  screen.querySelectorAll('input[type="radio"]').forEach(input=>input.addEventListener("change",()=>{m.ratings[input.name]=input.value;update();}));
+  screen.innerHTML='<div class="kicker">Part 3 · Reasons behind your mental-health predictions</div><h1>What explains the mental-health differences you predicted between each pair of arms?</h1><div class="draft-tag">Proposal · Mechanism questions · Version 3</div><p>For each pair of arms below, rate how important each reason is in explaining the mental-health difference you predicted. The rows show the arm comparisons; the columns show possible reasons.</p><p id="importanceScale"><strong>Enter a whole number from 0 to 10 in each box: 0 = not important; 10 = extremely important.</strong> Rate each reason independently. Your ratings do not need to add up to 10. If a reason does not explain a difference for that pair, enter 0.</p><p class="small muted">Review draft: the final list and wording, including “mental engagement”, still need PI agreement.</p>'+mechanismMatrixHTML(m)+'<label class="field-label" for="otherMechanism">Another reason (optional)</label><input id="otherMechanism" class="text-field" type="text" value="'+escapeHTML(m.other)+'" placeholder="Add a reason that is missing above"><p class="small muted" id="otherRatingHint">If you add another reason, rate its importance for each pair using the same 0–10 scale.</p><div class="other-ratings">'+MECHANISM_PAIRS.map(pair=>'<div class="other-rating"><label for="other-'+pair.id+'">'+escapeHTML(pair.label)+'</label><input id="other-'+pair.id+'" type="number" min="0" max="10" step="1" inputmode="numeric" data-other-pair="'+pair.id+'" aria-label="Another reason: '+escapeHTML(pair.label)+'" aria-describedby="importanceScale otherRatingHint" placeholder="0–10" value="'+escapeHTML(m.otherRatings[pair.id]??'')+'"></div>').join('')+'</div><p id="mechanismStatus" class="answer-status" role="status"></p>';
+  setNavigation("Lock ratings & continue →",()=>{if(saveMechanisms())advanceInfo();},"Enter all 12 ratings. Adding another reason is optional.",!mechanismsComplete());
+  const update=()=>{
+    let answered=0;
+    screen.querySelectorAll('input[data-reason]').forEach(input=>{const valid=validImportance(input.value);if(valid)answered++;input.setAttribute("aria-invalid",input.value!==""&&!valid?"true":"false");});
+    screen.querySelectorAll('input[data-other-pair]').forEach(input=>{input.disabled=!m.other.trim();input.setAttribute("aria-invalid",!input.disabled&&input.value!==""&&!validImportance(input.value)?"true":"false");});
+    document.getElementById("nextButton").disabled=!mechanismsComplete();
+    document.getElementById("mechanismStatus").textContent=answered+' of 12 ratings entered.'+(m.other.trim()&&!MECHANISM_PAIRS.every(pair=>validImportance(m.otherRatings[pair.id]))?' Also enter all three ratings for your additional reason.':'')+' Use whole numbers from 0 to 10.';
+    persist();
+  };
+  screen.querySelectorAll('input[data-reason]').forEach(input=>input.addEventListener("input",()=>{m.ratings[input.dataset.pair][input.dataset.reason]=input.value;update();}));
+  screen.querySelectorAll('input[data-other-pair]').forEach(input=>input.addEventListener("input",()=>{m.otherRatings[input.dataset.otherPair]=input.value;update();}));
   document.getElementById("otherMechanism").addEventListener("input",event=>{m.other=event.target.value;update();});
-  document.getElementById("otherRating").addEventListener("change",event=>{m.otherRating=event.target.value;update();});
+  update();
 }
 function saveFeedback() {
   if(state.browseIndex!==null||state.feedback||state.phase!=="first"||currentSteps("first")[state.index]!=="feedback")return false;
@@ -643,7 +665,7 @@ function exportData() {
     windows:SETTINGS.windows,
     mental_health_measure:{definition:SETTINGS.mentalHealthDefinition,review_note:SETTINGS.mentalHealthPending},
     consumption_benchmark:{...SETTINGS.benchmark,period:SETTINGS.consumptionPeriod},
-    mechanisms:state.mechanisms?{...state.mechanisms,outcome:"mental_health",items:MECHANISMS,rating_labels:RATINGS,wording_provisional:true}:null,
+    mechanisms:state.mechanisms?{...state.mechanisms,outcome:"mental_health",items:MECHANISMS,comparisons:MECHANISM_PAIRS,scale:IMPORTANCE_SCALE,wording_provisional:true}:null,
     panels:enabledPanels.map(panel=>({id:panel.id,page_id:panel.pageParent||panel.id,document_label:panel.documentLabel||panel.id,title:panel.title,windows:panelWindows(panel),axis:{initial_min:panel.min??SETTINGS.min,initial_max:panel.max??SETTINGS.max,step:panel.step??SETTINGS.step,typed_amounts_expand:!!panel.money},unit:panel.unitCode,unit_label:panel.unit,proposed:!!panel.draft,alternative_version:!!panel.alternative,proposal_version:panel.proposalVersion||null,proposal_label:panel.proposalLabel||null,contrasts:panel.series.map(s=>s.label),definition:panel.explanation,context:panel.context||null,first_saved_at:state.first[panel.id]?.savedAt||null,revised_saved_at:state.revised[panel.id]?.savedAt||null,
       responses:panelWindows(panel).flatMap((window,r)=>panel.series.map((series,s)=>{
         const i=r*panel.series.length+s,first=state.first[panel.id]?.values[i]??null,second=state.revised[panel.id]?.values[i]??null;
@@ -668,11 +690,11 @@ function csvCell(value) {
 }
 function mechanismCSV(data) {
   const m=data.mechanisms;
-  const rows=[["reason_id","reason","importance_code","importance_label","ratings_saved_at"]];
-  if(m){
-    m.items.forEach(item=>rows.push([item.id,item.label,m.ratings[item.id],m.rating_labels[Number(m.ratings[item.id])],m.savedAt]));
-    if(m.other)rows.push(["other",m.other,m.otherRating,m.rating_labels[Number(m.otherRating)],m.savedAt]);
-  }
+  const rows=[["comparison_id","comparison","reason_id","reason","importance_0_to_10","ratings_saved_at"]];
+  if(m)m.comparisons.forEach(pair=>{
+    m.items.forEach(item=>rows.push([pair.id,pair.label,item.id,item.label,m.ratings[pair.id][item.id],m.savedAt]));
+    if(m.other)rows.push([pair.id,pair.label,"other",m.other,m.otherRatings[pair.id],m.savedAt]);
+  });
   return '\ufeff'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n');
 }
 function renderSummary() {
