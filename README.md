@@ -1,66 +1,66 @@
-# Prediction demo — 26 October 2026
+# SSPP prediction demo — 2 November 2026
 
-Version `2026-10-26-v9` adds desktop and phone layouts to the October 19 PI discussion version. Open `index.html` in a browser, or upload it as the default `index.html` in the existing GitHub Pages repository. It is a single file containing the interface, styles, and JavaScript; no build or external library is needed.
+Version `2026-11-02-v10.2` applies the actionable comments and tracked wording suggestions in the Google Doc `vip-SSPP`, tab **version Oct 26, 2026**, reviewed on November 2. The Google Doc and its comment threads have not been edited or resolved.
 
-The October 25 v8 release is preserved in `output/qualtrics_revised_2026_10_25`, and October 16 v7 in `output/qualtrics_revised_2026_10_16`. This update has not been published to GitHub. Upload the new `index.html` to the existing repository to keep the same demo URL, https://jingyao-wei.github.io/qualtrics-demo/. GitHub's commit history retains the old default. Version 9 uses a separate browser-session key, so existing v8 demo responses are not overwritten.
+Open `index.html` locally, or upload it as the default `index.html` in the existing GitHub Pages repository. This is one standalone file containing the interface, styles, and JavaScript. There is no build step or external library. This update has not been published to GitHub; the public URL will update after upload and deployment.
 
-## Desktop and phone layout
+The October 26 v9 release and October 25 v8 release are preserved unchanged in their dated output folders. Version 10.2 uses its own browser-session key and does not overwrite saved v9 responses. Existing Word, PDF, and Google Docs review copies still show v8 or earlier screenshots.
 
-- The desktop graph shows every comparison together. When the graph area is narrower than 560 pixels, a labelled selector shows one comparison at a time with 44-pixel marker targets. All periods remain in horizontal order, and all estimates remain in the table.
-- Focusing an answer field selects its comparison in the phone graph. Choosing a comparison or resizing the window does not change any answers.
-- Phone answer fields include a ± button for entering negative values with decimal keyboards. Blank answers remain distinct from zero.
-- Study-arm information and completed-answer summaries stack into labelled blocks on phones. Mechanism ratings, navigation, downloads, and the FAQ fit narrow screens.
-- Questions, units, validation, answer locking, and separate revision records are unchanged. Existing Word/Google Docs screenshots are still the v8 review copy; they have not been replaced with this layout.
+## Practice layout restored in v10.2
+
+At the user's clarification, practice retains the original three-example graph, three period columns, and nine answer boxes. All three tasks appear together on the same page. Only A in 1–2 (move its marker), B in 1–4 (type 0.25), and C in 1–6 (confirm zero on its marker) are required. The other six boxes may remain blank. A prominent note states this, and completion checks only those three tasks. The prior v10 and v10.1 releases remain unchanged in their dated output folders.
+
+Browser verification confirmed nine desktop markers, nine boxes, six blank boxes, and an enabled Continue button after the three tasks. The existing phone comparison selector and all nine table entries are preserved.
+
+## Changes from the October 26 comments
+
+- Simplified the introduction, removed repeated title wording and the two-hours-per-bag detail, separated Who/When/Work/Pay/Assignment, and adopted the proposed arm descriptions and expected-total-work wording.
+- Used past tense for questions about the completed trial, in the first and revision rounds.
+- Retained the original nine-marker tutorial at the user’s clarification. Instructions appear before the controls and specify just three tasks; the remaining six answers can stay blank. A completion message tells respondents when to continue.
+- Moved practice before the timing/reference-window page. Completing practice still requires reading that page before the first prediction.
+- Shortened the cumulative-window explanation and separated the phone-survey cadence from the baseline/endline interviews. Precise endline timing remains pending.
+- Adopted the suggested mental-health definition wording. Mental health still uses −0.50 to +0.50 SD.
+- Removed the routine decimal-precision sentence. Entries with more than two decimal places now receive an inline error, including trailing third decimals such as `0.100`.
+- Focused mechanism ratings on mental health. Adopted Leandro's consumption-level and consumption-volatility wording. Included the proposed “mental engagement” wording while retaining the Version 2 proposal label.
+- Replaced the selection of two or three reasons and separate minimum-length explanations with one large open question. It comes at the end of the first prediction/reasons block, before any additional information. It requires a nonblank answer but has no word minimum. The answer locks on submission and is included in the summary, JSON, and reasons CSV.
+- Preserved phone layouts, keyboard and pointer input, Back navigation, read-only saved responses, and separate first/revised numerical predictions.
 
 ## Current sequence
 
-1. Study context and four arms, followed by a brief implementation summary.
-2. Timing, data collection, and the cumulative 1–2, 1–4, and 1–6 reference windows.
-3. Required practice with fictional examples.
-4. Mental-health differences: three treatment arms versus Control, across three windows; −0.50 to +0.50 SD.
-5. Consumption differences: the same comparisons and windows, in GHC per household per two-week period.
-6. Proposed consumption-smoothing question: high-work minus low-work consumption within Predictable and Risky, across all six periods.
-7. Mechanism importance ratings, including Unsure and an optional additional reason.
-8. Explanations of two or three selected reasons.
-9. Additional information (explicitly pending).
-10. Choice to revise numerical predictions, followed by three revision pages if Yes.
-11. Optional age, country of residence, discipline, and professional title; then the answer summary and downloads.
+1. Study introduction and arms.
+2. Three practice tasks on the original nine-marker graph and table.
+3. Timing and cumulative windows 1–2, 1–4, and 1–6.
+4. Mental health versus Control: three arms × three windows.
+5. Consumption versus Control in GHC: three arms × three windows.
+6. Proposed high-minus-low consumption comparison within Predictable and Risky, over all six periods.
+7. Mental-health mechanism importance ratings.
+8. One open explanation of the mental-health predictions.
+9. Additional information, still a review placeholder.
+10. Revision choice, followed by three numerical revision pages if Yes.
+11. Optional demographics, then summary and downloads.
 
-There are 20 numerical estimates per round. Mechanism questions are collected once before the information step. Back preserves drafts and displays submitted answers read-only. First and revised numerical responses remain separate. No answers are transmitted externally.
+There are 20 numerical estimates per round. Nothing is transmitted externally.
 
-## Main changes
+## Decisions still needed from the PIs
 
-- Clear Mental health → Consumption → Reasons → About you section labels.
-- Mental health uses SD throughout. The definition follows the primary PHQ-2/GAD-2 index in the current analysis: higher scores mean better health, standardized against Control at baseline.
-- Consumption uses levels. The initial currency graph is −100 to +100 GHC; this is a provisional display, not a response limit. Typing larger amounts expands it. Positive values mean higher consumption; negative values mean lower consumption.
-- A consumption benchmark and USD reference sit beside consumption and in the FAQ. Missing values are labelled as pending.
-- The introduction covers home-based work, flexible hours, arms and advance knowledge before surveying and timing. The first-stage summary describes similar average income and greater variation in Predictable and Risky without invented percentages.
-- Mechanism ratings precede explanations. The draft asks for 20 words per selected reason to discourage very short answers; this threshold is editable.
-- Earlier consumption-unit alternatives and matched-calendar/early-versus-late proposals remain disabled in `PANELS`, and are omitted from the flow and downloads.
+- Whether the high–low question should also cover windows 1–2 and 1–4, and whether to add a mental-health version. These comments are questions, not settled instructions. Shorter windows can lack both work levels for some participants, so sample and weighting choices matter. The existing six-period consumption proposal remains in place with an explicit review note.
+- Exact endline timing relative to Period 6 and which surveys enter each reference window.
+- Final mechanism list, especially the proposed “mental engagement” wording. The one-box question is drafted for review; its location preserves explanations before any new evidence is shown.
+- Approved consumption benchmark, denominator/recall period, study earnings on the same basis, and historical USD conversion with date/source.
+- Confirmation of the mental-health outcome and qualitative income/crowd-out summary; any numerical first-stage results to show.
+- The actual information to reveal before revisions, and total consumption versus food expenditure/sample/period adjustments for the high–low question.
 
-## Inputs and decisions still needed
+The October 26 transcript was not present in the local Meetings folder. This update uses the comments and tracked suggestions in the specified Google Doc, including the comments recording Heather's mental-health-only and single-open-question requests.
 
-- Supply the approved consumption benchmark and study earnings on the same household/time basis; verify the denominator and consumption recall period.
-- Supply the study-period USD-per-GHC factor, date, and source. No current exchange rate has been substituted.
-- Verify the qualitative first-stage summary and supply numerical results for means, variability, and crowd-out if desired.
-- Confirm the primary mental-health measure from the analysis code is the intended survey outcome.
-- Confirm total consumption versus food expenditure for the high–low question, its estimator, and the initial currency-axis display. The current question estimates a spending gap, not a consumption-to-income ratio or an arm ranking. An explicit ranking is still a proposal.
-- Review the mechanism list, wording, and explanation minimum. These are Version 1 proposals, not finalized meeting language.
-- Supply the information to reveal before revisions. The suggested “We found X; how convinced are you?” question is not included because X and the disclosure have not been agreed.
-
-## Editing and files
+## Editing and verification
 
 Canonical source: `code/exploratory/qualtrics_revised_2026_10_12/index.html`.
-Local preview: `code/exploratory/qualtrics_six_periods/revised.html`.
-Dated release: `output/qualtrics_revised_2026_10_26/index.html`.
+Preview mirror: `code/exploratory/qualtrics_six_periods/revised.html`.
+Release: `output/qualtrics_revised_2026_11_02_v10_2/index.html`.
 
-Edit `PANELS` for questions, units, comparisons, and proposal labels; `MECHANISMS` and `RATINGS` for the importance matrix; and `renderInfo` for introduction wording. `SETTINGS.benchmark` holds `householdConsumption`, `studyIncome`, `source`, `usdPerGhc`, `exchangeRateDate`, and `exchangeRateSource`. `SETTINGS.additionalInformation` holds the approved disclosure. Update the version identifier after material changes and synchronize the three HTML copies.
+Edit `PANELS` for question wording/comparisons, `MECHANISMS` for reason labels, `SETTINGS.benchmark` for approved money references, and `SETTINGS.additionalInformation` for the disclosure. This is a review demo, not a Qualtrics QSF import.
 
-The source is a standalone review demo. It is not a Qualtrics QSF import or a ready-made Qualtrics question script. Existing Word/PDF exports have not been refreshed for v9.
-
-## Checks
-
-Run with the bundled environment:
+Regression command:
 
 ```powershell
 $env:UV_CACHE_DIR = Join-Path (Get-Location) 'output/.uv-cache'
@@ -68,8 +68,6 @@ $env:UV_PYTHON = 'C:/Users/jingy/.cache/codex-runtimes/codex-primary-runtime/dep
 uv run --no-project node 'code/exploratory/qualtrics_revised_2026_10_12/test_meeting_demo.cjs'
 ```
 
-Checks cover SD bounds, explicit zero versus missing, decimal currency entry and axis expansion, all 20 estimates, separate original/revised exports, mechanism and demographic records, spreadsheet-safe CSV text, and demographics routing with either revision choice.
+Passed checks: tutorial step requirements, decimal validation, SD bounds, currency expansion, all 20 estimates, separate revisions, nonblank open explanation and overwrite protection, JSON/CSV records, spreadsheet-safe text, and both final routes.
 
-The browser walkthrough also checked the tutorial, invalid SD entry, currency expansion, draft preservation on Back, read-only first answers, mechanism ratings and Other validation, the three-reason selection limit, separate revisions, optional demographics and invalid age, and the actual JSON download. It contained 20 estimates and preserved −0.50 as the first response after revising it to 0.15. No browser errors were logged. Captured screens use fictional test answers.
-
-The v9 browser walkthrough checked 320, 390, 768, and 1440-pixel viewport widths. The prediction page had no document-wide horizontal overflow, showed three mobile markers versus nine desktop markers, and retained the same answers across resizing. Pointer dragging, the required tutorial, automatic comparison selection, ± sign changes, currency expansion to ±4000, locked answers on Back, all 20 summary estimates, the No-revision route with blank demographics, and the phone FAQ were checked. No browser errors were logged. These checks use desktop Chromium at phone-sized viewports; physical iOS/Android keyboard and touch behavior still needs device testing. Screenshots are in `output/qualtrics_review_v9_screenshots`.
+The browser walkthrough completed all practice steps and the full revision route, checked Back/read-only behavior and explanation draft retention, and downloaded JSON with first 0.10 and revised −0.10 preserved separately. The explanation and mental-health scope were present in the downloaded record. No browser errors were logged. Phone-sized 320px and 390px layouts had no page-wide horizontal overflow. Physical phone hardware was not tested. Screenshots use fictional test entries where populated.
