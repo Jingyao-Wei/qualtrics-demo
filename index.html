@@ -83,6 +83,13 @@ dialog{max-height:87dvh}.dialog-head{flex-wrap:wrap}.dialog-head .quiet{flex-shr
   .footer button{min-height:44px;font-size:13px}.window-explain{grid-template-columns:1fr}.window-explain div{padding:12px}
   .keyboard-help{display:none}
 }
+.paired-plots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:22px 0}
+.outcome-panel{min-width:0;border:1px solid var(--line);border-radius:8px;padding:16px}
+.outcome-panel .prediction-question{font-size:16px;min-height:100px}.outcome-units{font-size:14px;min-height:44px}
+.outcome-panel .plot-help{min-height:110px}.outcome-panel .plot-title{margin-top:10px}
+.single-window .graph-picker{display:none}
+@media(max-width:899px){.paired-plots{grid-template-columns:1fr}.outcome-panel .prediction-question,.outcome-panel .outcome-units,.outcome-panel .plot-help{min-height:0}}
+@media(max-width:450px){.outcome-panel{padding:10px}.outcome-panel .plot{min-width:0}}
 @media(prefers-reduced-motion:reduce){.progress>span{transition:none}}
 </style>
 </head>
@@ -103,7 +110,7 @@ dialog{max-height:87dvh}.dialog-head{flex-wrap:wrap}.dialog-head .quiet{flex-shr
 // REVIEW SETTINGS: archived alternatives remain disabled in PANELS below.
 // This standalone demo does not submit data to Qualtrics or any other service.
 const SETTINGS = {
-  version: "2026-11-02-v10.2",
+  version: "2026-11-02-v11.1",
   min: -0.5, max: 0.5, tick: 0.25, step: 0.01,
   windows: ["1–2", "1–4", "1–6"],
   // Remaining study inputs: meeting examples are not approved numerical benchmarks.
@@ -156,7 +163,12 @@ const PANELS = [
    context:"Compare periods with 15 assigned bags (high work) with periods with 3 assigned bags (low work), separately within Predictable and Risky. Predictable participants knew the full schedule in advance; Risky participants learned each assignment at the start of that period.",
    description:"Within each arm, how much higher or lower was average household consumption in high-work periods than in low-work periods?",
    explanation:"Enter high-work minus low-work consumption in GHC per household per two-week period, separately for Predictable and Risky. Zero means equal average consumption in high- and low-work periods. A negative answer means consumption is lower in high-work periods. This comparison is within each arm, not relative to Control, and uses observations across all six periods.",
-   draftNote:"Proposal retained for PI review: one high-minus-low estimate per arm across all six periods. The October 26 comments ask whether to add windows 1–2 and 1–4 and a mental-health comparison. These remain open decisions. Shorter windows may not contain both high- and low-work periods for every participant, so the estimation sample and weighting must be agreed. Confirm period adjustments and total consumption versus food spending before fielding."}
+   draftNote:"Proposal retained for PI review: one high-minus-low estimate per arm across all six periods. Consumption and mental health are shown together as requested. Adding windows 1–2 and 1–4 remains for PI discussion. Shorter windows may not contain both high- and low-work periods for every participant, so the estimation sample and weighting must be agreed. Confirm period adjustments and total consumption versus food spending before fielding."},
+  {id:"MH_high_low",pageParent:"CON_high_low",enabled:true,section:"Mental health",title:"High versus low work periods",unit:"Standard deviation difference: high minus low",unitCode:"sd",min:-0.5,max:0.5,tick:0.25,step:0.01,windows:["1–6"],windowHeading:"Study periods",draft:true,
+   series:[{...COLORS.predictable,short:"Predictable: high − low",label:"Predictable: high − low"},{...COLORS.risky,short:"Risky: high − low",label:"Risky: high − low"}],
+   description:"Within each arm, how much better or worse was mental health in high-work periods than in low-work periods?",
+   explanation:"Enter high-work minus low-work mental health in standard deviations, separately for Predictable and Risky, using observations across all six periods. Positive means better mental health in high-work periods; negative means worse; zero means no difference. This is a within-arm comparison, not a treatment–Control effect. Use the same mental-health index and pre-intervention Control standard deviation as before.",
+   draftNote:"Mental-health version added at the user's request. The precise survey observations, estimation sample, weighting and adjustment for period effects remain for PI confirmation."}
 ];
 
 const MECHANISMS = [
@@ -168,6 +180,8 @@ const MECHANISMS = [
 const RATINGS = ["Not at all", "Slightly", "Moderately", "Very", "Extremely", "Unsure"];
 
 const enabledPanels = PANELS.filter(panel=>panel.enabled);
+const predictionPages = enabledPanels.filter(panel=>!panel.pageParent);
+function panelsForPage(panel) { const id=panel.pageParent||panel.id;return enabledPanels.filter(p=>p.id===id||p.pageParent===id); }
 const infoScreens = ["welcome","tutorial","instructions"];
 const PRACTICE_PANEL = {
   id:"tutorial",title:"Practice score",unit:"Practice difference (fictional units)",
@@ -177,10 +191,10 @@ const screen = document.getElementById("screen");
 const navigation = document.getElementById("navigation");
 const dialog = document.getElementById("referenceDialog");
 const STORAGE_KEY = "sspp-slider-demo-" + SETTINGS.version + "-" + enabledPanels.map(panel=>panel.id).join("-");
-let resizeObserver = null;
+let resizeObservers = [];
 
 function newState() {
-  return {version:SETTINGS.version,startedAt:new Date().toISOString(),phase:"first",index:0,browseIndex:null,first:{},drafts:{},revised:{},revisionDrafts:{},practice:{values:Array(9).fill(""),tasks:[false,false,false],completedAt:null},mechanismDraft:{ratings:{},other:"",otherRating:"",explanation:""},mechanisms:null,mechanismExplanationSavedAt:null,demographicDraft:{age:"",country:"",discipline:"",title:""},demographics:null,informationSeenAt:null,revisionSelection:null,revisionRequested:null,revisionChoiceAt:null,finishedAt:null};
+  return {version:SETTINGS.version,startedAt:new Date().toISOString(),phase:"first",index:0,browseIndex:null,first:{},drafts:{},revised:{},revisionDrafts:{},practice:{values:Array(9).fill(""),tasks:[false,false,false],completedAt:null},mechanismDraft:{ratings:{},other:"",otherRating:""},mechanisms:null,feedbackDraft:"",feedback:null,demographicDraft:{age:"",country:"",discipline:"",title:""},demographics:null,informationSeenAt:null,revisionSelection:null,revisionRequested:null,revisionChoiceAt:null,finishedAt:null};
 }
 function loadState() {
   try {
@@ -226,20 +240,20 @@ function rawFor(panel) {
   if (!target[panel.id]) target[panel.id]=state.phase==="revision"?state.first[panel.id].values.map(format):Array(panelWindows(panel).length*panel.series.length).fill("");
   return target[panel.id];
 }
-function currentSteps(phase=state.phase) { return phase==="revision"?enabledPanels.map(p=>p.id):infoScreens.concat(enabledPanels.map(p=>p.id),["mechanisms","mechanism-explanation","additional-information","revision-choice"]); }
+function currentSteps(phase=state.phase) { return phase==="revision"?predictionPages.map(p=>p.id):infoScreens.concat(predictionPages.map(p=>p.id),["mechanisms","feedback","additional-information","revision-choice"]); }
 // Survey progress stays at the current unanswered page while an earlier page is viewed.
 function activePosition() {
   if(state.phase==="first")return state.index;
   const firstLength=currentSteps("first").length;
   if(state.phase==="revision")return firstLength+state.index;
-  return firstLength+(state.revisionRequested?enabledPanels.length:0)+(state.phase==="finished"?1:0);
+  return firstLength+(state.revisionRequested?predictionPages.length:0)+(state.phase==="finished"?1:0);
 }
 function viewPosition() { return state.browseIndex??activePosition(); }
 function viewLocation() {
   const position=viewPosition(),firstSteps=currentSteps("first");
   if(position<firstSteps.length)return {phase:"first",index:position,id:firstSteps[position]};
-  const index=position-firstSteps.length,revisionCount=state.revisionRequested?enabledPanels.length:0;
-  if(index<revisionCount)return {phase:"revision",index,id:enabledPanels[index].id};
+  const index=position-firstSteps.length,revisionCount=state.revisionRequested?predictionPages.length:0;
+  if(index<revisionCount)return {phase:"revision",index,id:predictionPages[index].id};
   if(index===revisionCount)return {phase:"demographics",index:0,id:"demographics"};
   return {phase:"finished",index:0,id:"summary"};
 }
@@ -263,7 +277,7 @@ function advanceInfo() {
   persist();render();
 }
 function render() {
-  if(resizeObserver) resizeObserver.disconnect();
+  resizeObservers.forEach(observer=>observer.disconnect());resizeObservers=[];
   screen.replaceChildren();navigation.replaceChildren();
   document.getElementById("reviewButton").hidden=Object.keys(state.first).length===0;
   const location=viewLocation();
@@ -288,7 +302,7 @@ function render() {
   else if(id==="tutorial") renderTutorial();
   else if(id==="revision-choice") renderRevisionChoice();
   else if(id==="mechanisms") renderMechanisms();
-  else if(id==="mechanism-explanation") renderMechanismExplanation();
+  else if(id==="feedback") renderFeedback();
   else renderInfo(id);
   screen.focus({preventScroll:true});window.scrollTo(0,0);
 }
@@ -352,12 +366,12 @@ function drawLegend(target,series) {
 function drawPlot(target,panel,raw,interactive,onChange) {
   target.replaceChildren();
   const width=Math.max(240,target.clientWidth),height=370,left=Math.min(210,Math.max(88,width*.24)),right=width,top=70,bottom=335;
-  const container=target.parentElement,compact=width<560;
-  const selected=Number(container.querySelector('#plotSeries').value);
+  const container=target.parentElement,compact=width<560,filterComparisons=compact&&panelWindows(panel).length>1;
+  const selected=Number(container.querySelector('select').value);
   container.classList.toggle('is-compact',compact);
   container.style.setProperty("--comparison-width",left+"px");
-  container.querySelectorAll('.estimate-table tbody tr').forEach((row,i)=>row.classList.toggle('graph-selected',compact&&i===selected));
-  drawLegend(document.getElementById('predictionLegend'),compact?[panel.series[selected]]:panel.series);
+  container.querySelectorAll('.estimate-table tbody tr').forEach((row,i)=>row.classList.toggle('graph-selected',filterComparisons&&i===selected));
+  drawLegend(document.getElementById(panel.id+'_legend'),filterComparisons?[panel.series[selected]]:panel.series);
   const {min,max,tick}=plotRange(panel,raw);
   const windows=panelWindows(panel);
   const y=value=>bottom-(value-min)/(max-min)*(bottom-top);
@@ -377,9 +391,9 @@ function drawPlot(target,panel,raw,interactive,onChange) {
   const nodes=[];
   raw.forEach((value,i)=>{
     const r=Math.floor(i/panel.series.length),s=i%panel.series.length,series=panel.series[s];
-    if(compact&&s!==selected)return;
-    const spacing=Math.min(width<500?22:32,(groupWidth-8)/panel.series.length);
-    const x=left+(r+.5)*groupWidth+(compact?0:(s-(panel.series.length-1)/2)*spacing);
+    if(filterComparisons&&s!==selected)return;
+    const spacing=Math.min(compact&&!filterComparisons?44:width<500?22:32,(groupWidth-8)/panel.series.length);
+    const x=left+(r+.5)*groupWidth+(filterComparisons?0:(s-(panel.series.length-1)/2)*spacing);
     const label=answerLabel(panel,i);
     const group=svgElement("g",interactive?{class:"handle",tabindex:0,role:"slider","aria-label":label,"aria-orientation":"vertical","aria-valuemin":min,"aria-valuemax":max}:{role:"img","aria-label":label},svg);
     const title=svgElement("title",{},group,label);
@@ -427,7 +441,7 @@ function tableHTML(panel,values,editable,prefix) {
     html+='<tr><th scope="row"><span class="row-comparison">'+shapeHTML(s)+'<span>'+escapeHTML(s.label)+'</span></span></th>';
     windows.forEach((window,r)=>{
       const i=r*series.length+c;
-      html+='<td>'+(editable?'<input class="estimate" type="text" inputmode="decimal" autocomplete="off" id="'+prefix+'_'+i+'" data-cell="'+i+'" value="'+escapeHTML(values[i])+'" aria-label="'+escapeHTML(answerLabel(panel,i))+'" aria-describedby="entryHelp"><button type="button" class="sign-toggle" data-sign-cell="'+i+'" aria-label="Change sign: '+escapeHTML(answerLabel(panel,i))+'" title="Change positive to negative or negative to positive">±</button>':(values[i]===null?'—':escapeHTML(format(values[i]))))+(panel.money?'<small class="usd-reference" data-usd-cell="'+i+'">'+(parseAnswer(values[i],panel).valid?escapeHTML(usdDisplay(Number(values[i]))):'')+'</small>':'')+'</td>';
+      html+='<td>'+(editable?'<input class="estimate" type="text" inputmode="decimal" autocomplete="off" id="'+prefix+'_'+i+'" data-cell="'+i+'" value="'+escapeHTML(values[i])+'" aria-label="'+escapeHTML(answerLabel(panel,i))+'" aria-describedby="'+prefix+'_entryHelp"><button type="button" class="sign-toggle" data-sign-cell="'+i+'" aria-label="Change sign: '+escapeHTML(answerLabel(panel,i))+'" title="Change positive to negative or negative to positive">±</button>':(values[i]===null?'—':escapeHTML(format(values[i]))))+(panel.money?'<small class="usd-reference" data-usd-cell="'+i+'">'+(parseAnswer(values[i],panel).valid?escapeHTML(usdDisplay(Number(values[i]))):'')+'</small>':'')+'</td>';
     });html+='</tr>';
   });return html+'</tbody></table>';
 }
@@ -438,10 +452,10 @@ function shapeHTML(series) {
 }
 function entryHelpHTML(panel=PRACTICE_PANEL) {
   const instruction=panel.money?'Enter a difference in GHC, or drag a marker. The graph expands to fit typed amounts.':'Drag a marker or enter a number from −0.50 to +0.50.';
-  return '<p id="entryHelp" class="plot-help">'+instruction+' Hollow markers are unanswered. Click a marker at zero to confirm zero.<br><span class="keyboard-help">Keyboard: arrows adjust, Enter confirms, Delete clears.</span></p>';
+  return '<p id="'+panel.id+'_entryHelp" class="plot-help">'+instruction+' Hollow markers are unanswered. Click a marker at zero to confirm zero.<br><span class="keyboard-help">Keyboard: arrows adjust, Enter confirms, Delete clears.</span></p>';
 }
 function answerInterfaceHTML(panel,raw,editable=true) {
-  return `<div class="prediction-interface${panel.series.length===1?' single-comparison':''}"><h1 class="plot-title">${escapeHTML(panel.section||panel.title)}</h1><div class="graph-picker"><label for="plotSeries">Comparison shown in the graph</label><select id="plotSeries">${panel.series.map((s,i)=>`<option value="${i}">${escapeHTML(s.label)}</option>`).join('')}</select><p>Choose a comparison to view its markers. All comparisons remain in the table below.</p></div><p class="plot-unit">${escapeHTML(panel.unit)}</p><div id="predictionPlot" class="plot"></div><div id="predictionLegend" class="legend"></div>${editable?'<p class="phone-entry-help">To enter a negative number, type the amount and tap ± below its box. Tap ± again to make it positive.</p>':''}<div class="grid-wrap">${tableHTML(panel,raw,editable,panel.id)}</div></div>${editable?'<p id="answerStatus" class="answer-status" role="status" aria-live="polite"></p>':""}`;
+  return `<div id="${panel.id}_interface" class="prediction-interface${panel.series.length===1?' single-comparison':''}${panelWindows(panel).length===1?' single-window':''}"><h2 class="plot-title">${escapeHTML(panel.section||panel.title)}</h2><div class="graph-picker"><label for="${panel.id}_series">Comparison shown in the graph</label><select id="${panel.id}_series">${panel.series.map((s,i)=>`<option value="${i}">${escapeHTML(s.label)}</option>`).join('')}</select><p>Choose a comparison to view its markers. All comparisons remain in the table below.</p></div><p class="plot-unit">${escapeHTML(panel.unit)}</p><div id="${panel.id}_plot" class="plot"></div><div id="${panel.id}_legend" class="legend"></div>${editable?'<p class="phone-entry-help">To enter a negative number, type the amount and tap ± below its box. Tap ± again to make it positive.</p>':''}<div class="grid-wrap">${tableHTML(panel,raw,editable,panel.id)}</div></div>${editable?'<p id="'+panel.id+'_status" class="answer-status" role="status" aria-live="polite"></p>':""}`;
 }
 function panelContextHTML(panel) {
   const definition=panel.section==="Mental health"?'<details class="outcome-definition"'+(panel.id==="MH_slider_2"?' open':'')+'><summary>About the mental-health measure</summary><p>'+escapeHTML(SETTINGS.mentalHealthDefinition)+'</p><p class="small muted">'+escapeHTML(SETTINGS.mentalHealthPending)+'</p></details>':"";
@@ -452,15 +466,16 @@ function interpretationHTML(panel) {
 }
 function mountAnswerInterface(panel,raw,onUpdate) {
   // DOM rows are comparisons; response arrays remain indexed by window then comparison.
-  const inputs=Array.from(screen.querySelectorAll(".estimate")).sort((a,b)=>Number(a.dataset.cell)-Number(b.dataset.cell));
+  const root=document.getElementById(panel.id+"_interface");
+  const inputs=Array.from(root.querySelectorAll(".estimate")).sort((a,b)=>Number(a.dataset.cell)-Number(b.dataset.cell));
   let refreshPlot;
   function update(index,value,source) {
     if(index!==undefined){raw[index]=value;inputs[index].value=value;}
     let answered=0,firstError="";
     inputs.forEach((input,i)=>{const parsed=parseAnswer(raw[i],panel);if(parsed.valid)answered++;if(parsed.error&&!firstError)firstError=`${answerLabel(panel,i)}: ${parsed.error}`;input.setAttribute("aria-invalid",parsed.error?"true":"false");input.setCustomValidity(parsed.error);});
-    screen.querySelectorAll('[data-sign-cell]').forEach(button=>{const parsed=parseAnswer(raw[Number(button.dataset.signCell)],panel);button.disabled=!parsed.valid||parsed.value===0;});
-    if(panel.money)screen.querySelectorAll("[data-usd-cell]").forEach(label=>{const parsed=parseAnswer(raw[Number(label.dataset.usdCell)],panel);label.textContent=parsed.valid?usdDisplay(parsed.value):"";});
-    const status=document.getElementById("answerStatus");
+    root.querySelectorAll('[data-sign-cell]').forEach(button=>{const parsed=parseAnswer(raw[Number(button.dataset.signCell)],panel);button.disabled=!parsed.valid||parsed.value===0;});
+    if(panel.money)root.querySelectorAll("[data-usd-cell]").forEach(label=>{const parsed=parseAnswer(raw[Number(label.dataset.usdCell)],panel);label.textContent=parsed.valid?usdDisplay(parsed.value):"";});
+    const status=document.getElementById(panel.id+"_status");
     status.className="answer-status"+(firstError?" error":"");
     status.textContent=firstError;
     if(panel.money&&source!=="marker")redraw();
@@ -468,40 +483,52 @@ function mountAnswerInterface(panel,raw,onUpdate) {
     onUpdate({index,value,source,complete:answered===raw.length&&!firstError});persist();
   }
   inputs.forEach((input,i)=>{input.addEventListener("input",()=>update(i,input.value,"box"));input.addEventListener("blur",()=>{const parsed=parseAnswer(input.value,panel);if(parsed.valid)update(i,format(parsed.value),"format");});});
-  const target=document.getElementById("predictionPlot");
-  const picker=document.getElementById('plotSeries');
+  const target=document.getElementById(panel.id+"_plot");
+  const picker=document.getElementById(panel.id+'_series');
   function redraw(){refreshPlot=drawPlot(target,panel,raw,true,update);}
   function showComparison(index){const selected=String(index%panel.series.length);if(picker.value!==selected){picker.value=selected;redraw();}}
   picker.addEventListener('change',redraw);
   inputs.forEach((input,i)=>input.addEventListener('focus',()=>showComparison(i)));
-  screen.querySelectorAll('[data-sign-cell]').forEach(button=>button.addEventListener('click',()=>{const i=Number(button.dataset.signCell),parsed=parseAnswer(raw[i],panel);if(parsed.valid){showComparison(i);update(i,format(-parsed.value),'box');}}));
+  root.querySelectorAll('[data-sign-cell]').forEach(button=>button.addEventListener('click',()=>{const i=Number(button.dataset.signCell),parsed=parseAnswer(raw[i],panel);if(parsed.valid){showComparison(i);update(i,format(-parsed.value),'box');}}));
   redraw();update();
-  resizeObserver=new ResizeObserver(redraw);resizeObserver.observe(target);
+  const observer=new ResizeObserver(redraw);observer.observe(target);resizeObservers.push(observer);
 }
 function predictionTag(panel) {
-  return `Part ${panel.section==="Mental health"?1:2} · ${panel.section} · Prediction ${enabledPanels.indexOf(panel)+1}`;
+  const page=predictionPages.find(p=>p.id===(panel.pageParent||panel.id));
+  const label=panelsForPage(page).length>1?"High and low work periods":panel.section;
+  return `Part ${page.section==="Mental health"?1:2} · ${label} · Prediction ${predictionPages.indexOf(page)+1}`;
 }
 function proposalBadgeHTML(panel) {
   const label=panel.proposalVersion?`Proposal · Version ${panel.proposalVersion} · ${panel.proposalLabel}${panel.preferredBy?" · "+panel.preferredBy+" preference":""}`:panel.draft?`Proposed comparison · ${panel.title}`:"";
   return label?`<div class="draft-tag proposal-label">${escapeHTML(label)}</div>`:"";
 }
-function renderPanel(panel) {
-  const phase=viewLocation().phase,saved=(phase==="revision"?state.revised:state.first)[panel.id];
-  if(saved){renderLockedPanel(panel,saved,phase);return;}
-  const revising=state.phase==="revision",raw=rawFor(panel);
-  screen.innerHTML=`<div class="kicker">${escapeHTML(predictionTag(panel))}</div>${proposalBadgeHTML(panel)}<p class="prediction-question"><strong>${escapeHTML(panel.description)}</strong></p>${panelContextHTML(panel)}${entryHelpHTML(panel)}${answerInterfaceHTML(panel,raw)}${interpretationHTML(panel)}${revising?'<p class="small muted">Your first answers are preserved. Change only the predictions you wish to revise; all other values carry forward.</p>':""}`;
-  setNavigation(revising?"Save revision & continue →":"Lock answers & continue →",()=>commitPanel(panel),revising?"This saves a separate second answer for this page.":"Enter every estimate, including zeros, before continuing. Continuing locks this page until the optional revision round.",true);
-  mountAnswerInterface(panel,raw,({complete})=>{document.getElementById("nextButton").disabled=!complete;});
+function pagePredictionHTML(panel,records,editable) {
+  const panels=panelsForPage(panel);
+  if(panels.length===1)return `<p class="prediction-question"><strong>${escapeHTML(panel.description)}</strong></p>${panelContextHTML(panel)}${editable?entryHelpHTML(panel):''}${answerInterfaceHTML(panel,records[panel.id],editable)}${interpretationHTML(panel)}`;
+  return `<h1>High versus low work periods</h1><p class="comparison-definition">${escapeHTML(panel.context)}</p><p>Predict both outcomes within each arm, using observations across periods 1–6. Enter a high-work minus low-work difference in each box.</p><div class="paired-plots">${panels.map(p=>`<section class="outcome-panel" aria-label="${escapeHTML(p.section)} predictions"><p class="prediction-question"><strong>${escapeHTML(p.description)}</strong></p><p class="outcome-units"><strong>${escapeHTML(p.section)}:</strong> ${p.money?'GHC per household per two-week period.':'Standard deviations (SD), from −0.50 to +0.50.'}</p>${editable?entryHelpHTML(p):''}${answerInterfaceHTML(p,records[p.id],editable)}${interpretationHTML(p)}</section>`).join('')}</div>${benchmarkHTML()}${panelContextHTML(panels.find(p=>p.section==="Mental health"))}`;
 }
-function renderLockedPanel(panel,saved,phase) {
-  const revised=phase==="revision";
-  screen.innerHTML=`<div class="kicker">${escapeHTML(predictionTag(panel))}</div>${proposalBadgeHTML(panel)}<p class="locked-note" role="status"><strong>Answers locked · read-only.</strong> ${revised?"These are your saved revised answers.":"These are your saved first answers."} Going back does not unlock this page.</p><p class="prediction-question"><strong>${escapeHTML(panel.description)}</strong></p>${panelContextHTML(panel)}${answerInterfaceHTML(panel,saved.values,false)}${interpretationHTML(panel)}`;
+function pageAnswersComplete(panel) {
+  return panelsForPage(panel).every(p=>rawFor(p).every(value=>parseAnswer(value,p).valid));
+}
+function renderPanel(panel) {
+  const phase=viewLocation().phase,store=phase==="revision"?state.revised:state.first;
+  if(panelsForPage(panel).every(p=>store[p.id])){renderLockedPanel(panel,phase);return;}
+  const revising=state.phase==="revision",records=Object.fromEntries(panelsForPage(panel).map(p=>[p.id,rawFor(p)]));
+  screen.innerHTML=`<div class="kicker">${escapeHTML(predictionTag(panel))}</div>${proposalBadgeHTML(panel)}${pagePredictionHTML(panel,records,true)}${revising?'<p class="small muted">Your first answers are preserved. Change only the predictions you wish to revise; all other values carry forward.</p>':""}`;
+  setNavigation(revising?"Save revision & continue →":"Lock answers & continue →",()=>commitPanel(panel),revising?"This saves a separate second answer for every plot on this page.":"Enter every estimate, including zeros, before continuing. Continuing locks every plot on this page.",true);
+  panelsForPage(panel).forEach(p=>mountAnswerInterface(p,records[p.id],()=>{document.getElementById("nextButton").disabled=!pageAnswersComplete(panel);}));
+}
+function renderLockedPanel(panel,phase) {
+  const revised=phase==="revision",store=revised?state.revised:state.first;
+  const records=Object.fromEntries(panelsForPage(panel).map(p=>[p.id,store[p.id].values]));
+  screen.innerHTML=`<div class="kicker">${escapeHTML(predictionTag(panel))}</div>${proposalBadgeHTML(panel)}<p class="locked-note" role="status"><strong>Answers locked · read-only.</strong> ${revised?"These are your saved revised answers.":"These are your saved first answers."} Going back does not unlock this page.</p>${pagePredictionHTML(panel,records,false)}`;
   setNavigation("Continue →",advanceInfo,"You can review earlier pages. Your locked answers remain unchanged.");
-  const target=document.getElementById("predictionPlot");
-  function redraw(){drawPlot(target,panel,saved.values,false,()=>{});}
-  document.getElementById('plotSeries').addEventListener('change',redraw);
-  redraw();
-  resizeObserver=new ResizeObserver(redraw);resizeObserver.observe(target);
+  panelsForPage(panel).forEach(p=>{
+    const target=document.getElementById(p.id+"_plot");
+    function redraw(){drawPlot(target,p,records[p.id],false,()=>{});}
+    document.getElementById(p.id+'_series').addEventListener('change',redraw);
+    redraw();const observer=new ResizeObserver(redraw);observer.observe(target);resizeObservers.push(observer);
+  });
 }
 function recordPracticeAction(practice,index,value,source) {
   const parsed=parseAnswer(value??"");
@@ -513,7 +540,7 @@ function recordPracticeAction(practice,index,value,source) {
 function renderTutorial() {
   const practice=state.practice;
   const tasks=["Move the Example A marker for Periods 1–2 away from zero.","Type 0.25 in the Example B box for Periods 1–4.","Click or tap the Example C marker at zero for Periods 1–6 to confirm zero."];
-  screen.innerHTML=`<div class="kicker">Practice · not a survey prediction</div><p class="prediction-question"><strong>Try the graph and the answer boxes before making your predictions.</strong></p><p><strong>You do not need to move all nine markers.</strong> Complete only the three practice tasks below to continue. You can leave the other six boxes blank.</p><p class="small muted">These fictional examples teach the controls. Practice answers are not included in your predictions.</p><ol id="practiceTasks" class="practice-tasks" aria-live="polite"></ol>${entryHelpHTML()}${answerInterfaceHTML(PRACTICE_PANEL,practice.values)}<p id="practiceStatus" class="answer-status" role="status" aria-live="polite"></p>`;
+  screen.innerHTML=`<div class="kicker">Practice · not a survey prediction</div><p class="prediction-question"><strong>Try the graph and the answer boxes before making your predictions.</strong></p><p><strong>For practice only, you do not need to move all nine markers.</strong> Complete the three tasks below; you can leave the other six boxes blank. On the actual prediction pages, enter every answer, including zero when you expect no difference.</p><p class="small muted">These fictional examples teach the controls. Practice answers are not included in your predictions.</p><ol id="practiceTasks" class="practice-tasks" aria-live="polite"></ol>${entryHelpHTML()}${answerInterfaceHTML(PRACTICE_PANEL,practice.values)}<p id="practiceStatus" class="answer-status" role="status" aria-live="polite"></p>`;
   if(practice.completedAt)screen.insertAdjacentHTML("afterbegin",'<p class="locked-note">Practice complete. You can try the controls again or continue. Your predictions stay unchanged.</p>');
   setNavigation("Continue to study timing →",()=>{
     if(!practice.completedAt&&!practice.tasks.every(Boolean))return;
@@ -527,23 +554,24 @@ function renderTutorial() {
     document.getElementById("nextButton").disabled=!complete;
   });
 }
+function savePageAnswers(panel) {
+  // Save every outcome on a page together, never a partial or overwritten round.
+  const store=state.phase==="revision"?state.revised:state.first,panels=panelsForPage(panel);
+  if(state.browseIndex!==null||panels.some(p=>store[p.id])||!pageAnswersComplete(panel))return false;
+  const savedAt=new Date().toISOString();
+  panels.forEach(p=>{store[p.id]={values:rawFor(p).map(value=>parseAnswer(value,p).value),savedAt};});
+  return true;
+}
 function commitPanel(panel) {
-  // Navigation back must never resubmit or overwrite either saved round.
-  if(state.browseIndex!==null||(state.phase==="revision"?state.revised:state.first)[panel.id])return;
-  const raw=rawFor(panel),parsed=raw.map(value=>parseAnswer(value,panel));
-  if(parsed.some(value=>!value.valid))return;
-  const record={values:parsed.map(value=>value.value),savedAt:new Date().toISOString()};
-  if(state.phase==="revision")state.revised[panel.id]=record;
-  else if(!state.first[panel.id])state.first[panel.id]=record;
+  if(!savePageAnswers(panel))return;
   state.index++;
-  if(state.phase==="revision"&&state.index>=enabledPanels.length)state.phase="demographics";
+  if(state.phase==="revision"&&state.index>=predictionPages.length)state.phase="demographics";
   persist();render();
 }
-
 function mechanismSummaryHTML() {
   if(!state.mechanisms)return "";
   const m=state.mechanisms;
-  return '<section class="summary-card"><h2>Reasons behind your mental-health predictions</h2><ul>'+MECHANISMS.map(item=>'<li>'+escapeHTML(item.label)+': <strong>'+escapeHTML(RATINGS[Number(m.ratings[item.id])])+'</strong></li>').join('')+(m.other?'<li>Other: '+escapeHTML(m.other)+' — <strong>'+escapeHTML(RATINGS[Number(m.otherRating)])+'</strong></li>':'')+'</ul>'+(state.mechanismExplanationSavedAt?'<h3>Your explanation</h3><p class="written-answer">'+escapeHTML(m.explanation)+'</p>':'')+'</section>';
+  return '<section class="summary-card"><h2>Reasons behind your mental-health predictions</h2><ul>'+MECHANISMS.map(item=>'<li>'+escapeHTML(item.label)+': <strong>'+escapeHTML(RATINGS[Number(m.ratings[item.id])])+'</strong></li>').join('')+(m.other?'<li>Other: '+escapeHTML(m.other)+' — <strong>'+escapeHTML(RATINGS[Number(m.otherRating)])+'</strong></li>':'')+'</ul>'+'</section>';
 }
 function renderMechanisms() {
   if(state.mechanisms) {
@@ -555,35 +583,37 @@ function renderMechanisms() {
   const complete=()=>MECHANISMS.every(item=>Object.hasOwn(m.ratings,item.id))&&(!m.other.trim()||m.otherRating!=="");
   setNavigation("Lock ratings & continue →",()=>{
     if(!complete()||state.browseIndex!==null)return;
-    state.mechanisms={ratings:{...m.ratings},other:m.other.trim(),otherRating:m.other.trim()?m.otherRating:"",explanation:"",savedAt:new Date().toISOString()};advanceInfo();
+    state.mechanisms={ratings:{...m.ratings},other:m.other.trim(),otherRating:m.other.trim()?m.otherRating:"",savedAt:new Date().toISOString()};advanceInfo();
   },"Rate each listed reason. You can choose Unsure. An additional reason is optional.",!complete());
   const update=()=>{document.getElementById("nextButton").disabled=!complete();document.getElementById("mechanismStatus").textContent=m.other.trim()&&!m.otherRating?"Choose the importance of your additional reason.":"";persist();};
   screen.querySelectorAll('input[type="radio"]').forEach(input=>input.addEventListener("change",()=>{m.ratings[input.name]=input.value;update();}));
   document.getElementById("otherMechanism").addEventListener("input",event=>{m.other=event.target.value;update();});
   document.getElementById("otherRating").addEventListener("change",event=>{m.otherRating=event.target.value;update();});
 }
-function saveMechanismExplanation() {
-  if(state.browseIndex!==null||state.mechanismExplanationSavedAt||!state.mechanisms||!state.mechanismDraft.explanation.trim())return false;
-  state.mechanisms.explanation=state.mechanismDraft.explanation.trim();
-  state.mechanismExplanationSavedAt=new Date().toISOString();
+function saveFeedback() {
+  if(state.browseIndex!==null||state.feedback||state.phase!=="first"||currentSteps("first")[state.index]!=="feedback")return false;
+  state.feedback={text:state.feedbackDraft.trim(),savedAt:new Date().toISOString()};
   return true;
 }
-function renderMechanismExplanation() {
-  if(state.mechanismExplanationSavedAt){
-    screen.innerHTML='<div class="kicker">Part 3 · Reasons behind your mental-health predictions</div><h1>Your explanation</h1><p class="locked-note">Answer locked · read-only.</p>'+mechanismSummaryHTML();
-    setNavigation("Continue →",advanceInfo,"Your saved explanation remains unchanged.");return;
+function feedbackSummaryHTML() {
+  if(!state.feedback)return "";
+  return '<section class="summary-card"><h2>Is there anything we missed?</h2><p class="written-answer">'+escapeHTML(state.feedback.text||"No additional comments.")+'</p></section>';
+}
+function renderFeedback() {
+  if(state.feedback){
+    screen.innerHTML='<div class="kicker">Additional comments</div><h1>Your comments</h1><p class="locked-note">Answer saved · read-only.</p>'+feedbackSummaryHTML();
+    setNavigation("Continue →",advanceInfo,"Your saved comments remain unchanged.");return;
   }
-  const m=state.mechanismDraft;
-  screen.innerHTML='<div class="kicker">Part 3 · Reasons behind your mental-health predictions</div><h1>What explains your mental-health predictions?</h1><p>Explain the reasoning behind the differences you predicted across the study arms. You may discuss the reasons above, other mechanisms, or anything you are uncertain about.</p><label class="field-label" for="overallExplanation">Your explanation</label><textarea id="overallExplanation" rows="10" aria-describedby="explanationHint">'+escapeHTML(m.explanation)+'</textarea><p id="explanationHint" class="small muted">Use this one box for your full explanation. There is no word minimum.</p>';
-  setNavigation("Lock explanation & continue →",()=>{if(saveMechanismExplanation())advanceInfo();},"This completes your first predictions and explanation before the additional-information step.",!m.explanation.trim());
-  document.getElementById('overallExplanation').addEventListener('input',event=>{m.explanation=event.target.value;document.getElementById('nextButton').disabled=!m.explanation.trim();persist();});
+  screen.innerHTML='<div class="kicker">Additional comments</div><h1>Is there anything we missed?</h1><p>Are there other factors we should consider when interpreting the study results, information you would have found helpful, or questions you think we should have asked? Please share any other thoughts or suggestions.</p><label class="field-label" for="generalFeedback">Your comments (optional)</label><textarea id="generalFeedback" rows="10" aria-describedby="feedbackHint">'+escapeHTML(state.feedbackDraft)+'</textarea><p id="feedbackHint" class="small muted">You can leave this blank. There is no word minimum.</p>';
+  setNavigation("Continue →",()=>{if(saveFeedback())advanceInfo();},"This question is optional. Your comments are saved before the additional-information page.");
+  document.getElementById("generalFeedback").addEventListener("input",event=>{state.feedbackDraft=event.target.value;persist();});
 }
 function renderRevisionChoice() {
   if(state.revisionRequested!==null){
     screen.innerHTML=`<div class="kicker">Review your predictions</div><h1>Your revision decision</h1><p class="locked-note"><strong>Decision saved · read-only.</strong></p><p class="lead">${state.revisionRequested?"You chose to revise your answers.":"You chose to keep your first answers."}</p><p>Your first answers remain locked. Going back does not change this decision or start another revision round.</p>`;
     setNavigation("Continue →",advanceInfo,"Your saved revision decision remains unchanged.");return;
   }
-  screen.innerHTML=`<div class="kicker">Review your predictions</div><h1>Would you like to revise your first answers?</h1><p class="lead">Your first predictions are locked and saved separately.</p><p>You can inspect them using “First answers” above. Revising reopens the three numerical prediction pages with your existing values. Your mechanism ratings and explanation remain part of your first response.</p><div class="choice-list"><label class="choice"><input type="radio" name="revise" value="yes"><div><strong>Yes, I would like to revise</strong><span>Keep my first answers and record a second set separately.</span></div></label><label class="choice"><input type="radio" name="revise" value="no"><div><strong>No, keep my first answers</strong><span>Finish with my first answers.</span></div></label></div><p class="choices-foot">If the preceding information page was marked pending, no new study evidence has been shown. This is a test of the revision flow only.</p>`;
+  screen.innerHTML=`<div class="kicker">Review your predictions</div><h1>Would you like to revise your first answers?</h1><p class="lead">Your first predictions are locked and saved separately.</p><p>You can inspect them using “First answers” above. Revising reopens the three numerical prediction pages with your existing values. Your mechanism ratings and additional comments remain part of your first response.</p><div class="choice-list"><label class="choice"><input type="radio" name="revise" value="yes"><div><strong>Yes, I would like to revise</strong><span>Keep my first answers and record a second set separately.</span></div></label><label class="choice"><input type="radio" name="revise" value="no"><div><strong>No, keep my first answers</strong><span>Finish with my first answers.</span></div></label></div><p class="choices-foot">If the preceding information page was marked pending, no new study evidence has been shown. This is a test of the revision flow only.</p>`;
   setNavigation("Continue →",()=>{
     const selected=screen.querySelector('input[name="revise"]:checked');if(!selected)return;
     state.revisionRequested=selected.value==="yes";state.revisionChoiceAt=new Date().toISOString();
@@ -628,14 +658,15 @@ function exportData() {
     demo:true,specification:"Revising Sliders 10.12.26.docx",feedback:["Feedback Interface - Oct 14, 2026 LSC vs3.pdf","qualtrics_demo_2026_10_15, HS.pdf","qualtrics_demo_2026_10_15ddw.pdf","PI mtg, 2026.10.19.txt","vip-SSPP Google Doc, version Oct 26 tab, comments reviewed 2026-11-02"],version:SETTINGS.version,
     tutorial_completed_at:state.practice.completedAt,
     demographics:state.demographics,
+    general_feedback:state.feedback?{question:"Is there anything we missed?",...state.feedback}:null,
     additional_information:{provided:!!SETTINGS.additionalInformation.trim(),text:SETTINGS.additionalInformation,seen_at:state.informationSeenAt},
     started_at:state.startedAt,finished_at:state.finishedAt,
     revision_requested:state.revisionRequested,revision_choice_at:state.revisionChoiceAt,
     windows:SETTINGS.windows,
     mental_health_measure:{definition:SETTINGS.mentalHealthDefinition,review_note:SETTINGS.mentalHealthPending},
     consumption_benchmark:{...SETTINGS.benchmark,period:SETTINGS.consumptionPeriod},
-    mechanisms:state.mechanisms?{...state.mechanisms,outcome:"mental_health",explanation_saved_at:state.mechanismExplanationSavedAt,items:MECHANISMS,rating_labels:RATINGS,wording_provisional:true}:null,
-    panels:enabledPanels.map(panel=>({id:panel.id,document_label:panel.documentLabel||panel.id,title:panel.title,windows:panelWindows(panel),axis:{initial_min:panel.min??SETTINGS.min,initial_max:panel.max??SETTINGS.max,step:panel.step??SETTINGS.step,typed_amounts_expand:!!panel.money},unit:panel.unitCode,unit_label:panel.unit,proposed:!!panel.draft,alternative_version:!!panel.alternative,proposal_version:panel.proposalVersion||null,proposal_label:panel.proposalLabel||null,contrasts:panel.series.map(s=>s.label),definition:panel.explanation,context:panel.context||null,first_saved_at:state.first[panel.id]?.savedAt||null,revised_saved_at:state.revised[panel.id]?.savedAt||null,
+    mechanisms:state.mechanisms?{...state.mechanisms,outcome:"mental_health",items:MECHANISMS,rating_labels:RATINGS,wording_provisional:true}:null,
+    panels:enabledPanels.map(panel=>({id:panel.id,page_id:panel.pageParent||panel.id,document_label:panel.documentLabel||panel.id,title:panel.title,windows:panelWindows(panel),axis:{initial_min:panel.min??SETTINGS.min,initial_max:panel.max??SETTINGS.max,step:panel.step??SETTINGS.step,typed_amounts_expand:!!panel.money},unit:panel.unitCode,unit_label:panel.unit,proposed:!!panel.draft,alternative_version:!!panel.alternative,proposal_version:panel.proposalVersion||null,proposal_label:panel.proposalLabel||null,contrasts:panel.series.map(s=>s.label),definition:panel.explanation,context:panel.context||null,first_saved_at:state.first[panel.id]?.savedAt||null,revised_saved_at:state.revised[panel.id]?.savedAt||null,
       responses:panelWindows(panel).flatMap((window,r)=>panel.series.map((series,s)=>{
         const i=r*panel.series.length+s,first=state.first[panel.id]?.values[i]??null,second=state.revised[panel.id]?.values[i]??null;
         return {window,contrast:series.label,first,revised:second,final:second===null?first:second,changed:second===null?false:second!==first};
@@ -647,8 +678,8 @@ function download(name,content,type) {
   const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement("a");a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function csvData(data) {
-  const rows=[["panel_id","document_label","unit","proposed_contrast","reference_window","comparison","first_answer","revised_answer","final_answer","changed","revision_requested","first_saved_at","revised_saved_at","revision_choice_at","additional_information_provided","additional_information_seen_at","age","country_of_residence","discipline","professional_title"]];
-  data.panels.forEach(panel=>panel.responses.forEach(response=>rows.push([panel.id,panel.document_label,panel.unit,panel.proposed,response.window,response.contrast,response.first,response.revised,response.final,response.changed,data.revision_requested,panel.first_saved_at,panel.revised_saved_at,data.revision_choice_at,data.additional_information.provided,data.additional_information.seen_at,data.demographics?.age,data.demographics?.country,data.demographics?.discipline,data.demographics?.title])));
+  const rows=[["panel_id","document_label","unit","proposed_contrast","reference_window","comparison","first_answer","revised_answer","final_answer","changed","revision_requested","first_saved_at","revised_saved_at","revision_choice_at","additional_information_provided","additional_information_seen_at","age","country_of_residence","discipline","professional_title","general_feedback","feedback_saved_at"]];
+  data.panels.forEach(panel=>panel.responses.forEach(response=>rows.push([panel.id,panel.document_label,panel.unit,panel.proposed,response.window,response.contrast,response.first,response.revised,response.final,response.changed,data.revision_requested,panel.first_saved_at,panel.revised_saved_at,data.revision_choice_at,data.additional_information.provided,data.additional_information.seen_at,data.demographics?.age,data.demographics?.country,data.demographics?.discipline,data.demographics?.title,data.general_feedback?.text,data.general_feedback?.savedAt])));
   return '\ufeff'+rows.map(row=>row.map(csvCell).join(",")).join("\r\n");
 }
 
@@ -659,23 +690,22 @@ function csvCell(value) {
 }
 function mechanismCSV(data) {
   const m=data.mechanisms;
-  const rows=[["reason_id","reason","importance_code","importance_label","explanation","ratings_saved_at","explanation_saved_at"]];
+  const rows=[["reason_id","reason","importance_code","importance_label","ratings_saved_at"]];
   if(m){
-    m.items.forEach(item=>rows.push([item.id,item.label,m.ratings[item.id],m.rating_labels[Number(m.ratings[item.id])],'',m.savedAt,m.explanation_saved_at]));
-    if(m.other)rows.push(["other",m.other,m.otherRating,m.rating_labels[Number(m.otherRating)],'',m.savedAt,m.explanation_saved_at]);
-    if(m.explanation_saved_at)rows.push(["overall_explanation","Mental-health prediction explanation","","",m.explanation,m.savedAt,m.explanation_saved_at]);
+    m.items.forEach(item=>rows.push([item.id,item.label,m.ratings[item.id],m.rating_labels[Number(m.ratings[item.id])],m.savedAt]));
+    if(m.other)rows.push(["other",m.other,m.otherRating,m.rating_labels[Number(m.otherRating)],m.savedAt]);
   }
   return '\ufeff'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n');
 }
 function renderSummary() {
-  screen.innerHTML=`<div class="kicker">Demo complete</div><h1>Your predictions are ready to review</h1><p class="lead">Revision requested: <strong>${state.revisionRequested?"Yes":"No"}</strong>.</p><p>${state.revisionRequested?"The first and revised values are preserved separately. Changed predictions are highlighted below.":"Your first answers are the final answers. The revised-answer fields remain blank."}</p><div class="download-row"><button class="secondary" id="downloadCSV">Download answers (CSV)</button><button class="secondary" id="downloadJSON">Download full record (JSON)</button><button class="secondary" id="downloadMechanisms">Download reasons (CSV)</button></div><p class="small muted">Downloads stay under your control. This demo has not sent answers to the study team or Qualtrics.</p>${summaryHTML(true)}${mechanismSummaryHTML()}${demographicSummaryHTML()}`;
+  screen.innerHTML=`<div class="kicker">Demo complete</div><h1>Your predictions are ready to review</h1><p class="lead">Revision requested: <strong>${state.revisionRequested?"Yes":"No"}</strong>.</p><p>${state.revisionRequested?"The first and revised values are preserved separately. Changed predictions are highlighted below.":"Your first answers are the final answers. The revised-answer fields remain blank."}</p><div class="download-row"><button class="secondary" id="downloadCSV">Download answers (CSV)</button><button class="secondary" id="downloadJSON">Download full record (JSON)</button><button class="secondary" id="downloadMechanisms">Download reasons (CSV)</button></div><p class="small muted">Downloads stay under your control. This demo has not sent answers to the study team or Qualtrics.</p>${summaryHTML(true)}${mechanismSummaryHTML()}${feedbackSummaryHTML()}${demographicSummaryHTML()}`;
   document.getElementById("downloadCSV").onclick=()=>download("sspp-demo-answers.csv",csvData(exportData()),"text/csv;charset=utf-8");
   document.getElementById("downloadJSON").onclick=()=>download("sspp-demo-answers.json",JSON.stringify(exportData(),null,2),"application/json");
   document.getElementById("downloadMechanisms").onclick=()=>download("sspp-demo-reasons.csv",mechanismCSV(exportData()),"text/csv;charset=utf-8");
   setNavigation("",null,"You can go back to review the introduction, tutorial, and locked answers.");
 }
 function openDialog(title,html) {document.getElementById("dialogTitle").textContent=title;document.getElementById("dialogBody").innerHTML=html;dialog.showModal();}
-document.getElementById("faqButton").onclick=()=>openDialog("FAQ & reference",`<div class="faq-body"><h2>What do the treatment arms mean?</h2><p>Control received no study work. Stable received 9 bags every period. Predictable received 3 bags in three periods and 15 in three periods, with the full 6-period schedule known in advance. Risky received 3 or 15 bags with a 50-50 chance, revealed at the start of each period.</p><h2>What are participants doing?</h2><p>Stitching bags at home with flexible hours. The piece rate was constant across treatment arms. Stable and Predictable schedules were explained with comprehension questions. Risky assignments were revealed by scratchcards.</p><h2>What do 1–2, 1–4, and 1–6 mean?</h2><p>They include observations from the first two, first four, and all six two-week periods. Each longer window includes earlier periods. Predict an average difference using those observations; do not add coefficients or total spending across periods. The high-versus-low comparison uses all six periods.</p><h2>Which units should I enter?</h2><p>Mental health uses standard deviations from −0.50 to +0.50. Consumption uses differences in Ghana cedis (GHC) per household per two-week period, not logs, percentages, or standard deviations. Its starting graph range is provisional and expands to include typed amounts.</p><h2>What is the mental-health index?</h2><p>${escapeHTML(SETTINGS.mentalHealthDefinition)}</p><details><summary>Technical definition and review status</summary><p>The current analysis uses an inverse-covariance-weighted PHQ-2/GAD-2 index, with symptom scales reversed and the combined index standardized to the Control group at baseline.</p><p>${escapeHTML(SETTINGS.mentalHealthPending)}</p></details>${implementationHTML()}<h2>Why ask about high- and low-work periods?</h2><p>This asks whether consumption differs between periods with 15 versus 3 assigned bags, separately for Predictable and Risky. It is a within-arm comparison, not a treatment–Control effect. The precise estimation sample and consumption definition remain under review. Adding windows 1–2 and 1–4, or a mental-health version of this comparison, is still for PI discussion.</p><h2>Can I go back?</h2><p>Yes. Back revisits earlier pages and preserves unfinished entries. Submitted predictions, ratings, explanations and the revision decision are read-only. Return to current page resumes where you left off.</p><h2>What happens if I revise?</h2><p>After the additional-information step, you can revise the three numerical prediction pages. Your first answers stay locked. Mental-health ratings and one open explanation are collected once before additional information. If the information page is still marked pending, the demo has provided no new study evidence.</p><h2>Are my answers sent anywhere?</h2><p>No. Answers are saved in this browser tab where supported. Download numerical answers and reasons as CSV, or the full record as JSON. This prototype is not yet connected to Qualtrics.</p></div>`);
+document.getElementById("faqButton").onclick=()=>openDialog("FAQ & reference",`<div class="faq-body"><h2>What do the treatment arms mean?</h2><p>Control received no study work. Stable received 9 bags every period. Predictable received 3 bags in three periods and 15 in three periods, with the full 6-period schedule known in advance. Risky received 3 or 15 bags with a 50-50 chance, revealed at the start of each period.</p><h2>What are participants doing?</h2><p>Stitching bags at home with flexible hours. The piece rate was constant across treatment arms. Stable and Predictable schedules were explained with comprehension questions. Risky assignments were revealed by scratchcards.</p><h2>What do 1–2, 1–4, and 1–6 mean?</h2><p>They include observations from the first two, first four, and all six two-week periods. Each longer window includes earlier periods. Predict an average difference using those observations; do not add coefficients or total spending across periods. The high-versus-low comparison uses all six periods.</p><h2>Which units should I enter?</h2><p>Mental health uses standard deviations from −0.50 to +0.50. Consumption uses differences in Ghana cedis (GHC) per household per two-week period, not logs, percentages, or standard deviations. Its starting graph range is provisional and expands to include typed amounts.</p><h2>What is the mental-health index?</h2><p>${escapeHTML(SETTINGS.mentalHealthDefinition)}</p><details><summary>Technical definition and review status</summary><p>The current analysis uses an inverse-covariance-weighted PHQ-2/GAD-2 index, with symptom scales reversed and the combined index standardized to the Control group at baseline.</p><p>${escapeHTML(SETTINGS.mentalHealthPending)}</p></details>${implementationHTML()}<h2>Why ask about high- and low-work periods?</h2><p>The two plots ask whether consumption and mental health differ between periods with 15 versus 3 assigned bags, separately for Predictable and Risky. Consumption uses GHC; mental health uses SD. It is a within-arm comparison, not a treatment–Control effect. The precise estimation sample and consumption definition remain under review. Adding windows 1–2 and 1–4 is still for PI discussion. Both outcomes currently use periods 1–6.</p><h2>Can I go back?</h2><p>Yes. Back revisits earlier pages and preserves unfinished entries. Submitted predictions, ratings, additional comments and the revision decision are read-only. Return to current page resumes where you left off.</p><h2>What happens if I revise?</h2><p>After the additional-information step, you can revise the three numerical prediction pages. Your first answers stay locked. Mental-health ratings and optional general comments are collected once before additional information. The open question follows the reason ratings and invites any additional thoughts or suggestions. If the information page is still marked pending, the demo has provided no new study evidence.</p><h2>Are my answers sent anywhere?</h2><p>No. Answers are saved in this browser tab where supported. Download numerical answers and reasons as CSV, or the full record as JSON. This prototype is not yet connected to Qualtrics.</p></div>`);
 document.getElementById("reviewButton").onclick=()=>openDialog("Your locked first answers",'<p class="small muted">Read-only. The optional revision round records new values separately.</p>'+summaryHTML(false)+mechanismSummaryHTML());
 document.getElementById("closeDialog").onclick=()=>dialog.close();
 document.getElementById("resetButton").onclick=()=>openDialog("Start a new demo?",'<p>This clears the answers stored for this demo in this browser tab. Download your completed answers first if you want to keep them.</p><button class="primary" id="confirmReset">Clear answers and restart</button>');
